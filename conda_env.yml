@@ -1,0 +1,17 @@
+name: octonyte
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - anaconda
+  - faiss-cpu
+  - selenium
+  - pip:
+      - crewai==0.95.0
+      - crewai-tools
+      - langchain
+      - langchain-community
+      - lxml-html-clean
+      - openai
+      - unstructured      
+prefix: /opt/conda/envs/octonyte
