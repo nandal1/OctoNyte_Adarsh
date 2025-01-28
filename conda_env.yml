@@ -4,14 +4,9 @@ channels:
   - defaults
 dependencies:
   - anaconda
-  - faiss-cpu
   - selenium
   - pip:
-      - crewai==0.95.0
-      - crewai-tools
-      - langchain
-      - langchain-community
-      - lxml-html-clean
+      - pydantic
       - openai
       - unstructured      
 prefix: /opt/conda/envs/octonyte
