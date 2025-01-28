@@ -22,6 +22,15 @@ RUN apt update && apt install -y \
     && apt clean
 
 
+# Download Anaconda and install it
+RUN wget --no-check-certificate https://repo.anaconda.com/archive/Anaconda3-2024.10-1-Linux-x86_64.sh -O /tmp/anaconda.sh && \
+    bash /tmp/anaconda.sh -b -p /opt/conda && \
+    rm /tmp/anaconda.sh
+
+# Add Anaconda to the PATH
+ENV PATH="/opt/conda/bin:$PATH"
+
+
 # Install g++14
 RUN add-apt-repository -y ppa:ubuntu-toolchain-r/ppa
 RUN apt update && apt install -y gcc-14 g++-14 && apt clean
