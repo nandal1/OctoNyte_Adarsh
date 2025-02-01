@@ -228,12 +228,12 @@ class RISCVAdderSubtractor32Test2 extends AnyFlatSpec {
       val testCases = Seq(
         (12345, 6789, Opcode.ADD_U32, 19134, false, false, false),  // Addition
         (25000, 15000, Opcode.ADD_U32, 40000, false, false, false), // Addition
-        (12345, 6789, Opcode.SUB_U32, 19134, false, false, false),  //UnSigned Subtraction
-        (25000, 15000, Opcode.SUB_U32, 19134, false, false, false),  //UnSigned Subtraction
-        (12345, 6789, Opcode.ADD_S32, 19134, false, false, false),  //Signed Addition 
-        (25000, 15000, Opcode.ADD_S32, 19134, false, false, false),  //Signed Addition 
-        (12345, 6789, Opcode.SUB_S32, 19134, false, false, false),  //Signed Subtraction
-        (25000, 15000, Opcode.SUB_S32, 19134, false, false, false),  //Signed Subtraction
+        (1234, 789, Opcode.SUB_U32, 19134, false, false, false),  //UnSigned Subtraction
+        (2500, 150, Opcode.SUB_U32, 19134, false, false, false),  //UnSigned Subtraction
+        (123, 678, Opcode.ADD_S32, 19134, false, false, false),  //Signed Addition 
+        (250, 150, Opcode.ADD_S32, 19134, false, false, false),  //Signed Addition 
+        (123, 167, Opcode.SUB_S32, 19134, false, false, false),  //Signed Subtraction
+        (250, 150, Opcode.SUB_S32, 19134, false, false, false),  //Signed Subtraction
 
         //(40000.U, 15000.U, Opcode.ADD_U32, 25000.U, false, false, false),  // Subtraction
         //(500000.U, 123456.U, Opcode.ADD_U32, 623456.U, false, false, false), // Addition
