@@ -226,19 +226,19 @@ class RISCVAdderSubtractor32Test2 extends AnyFlatSpec {
     }
     def testAdd(): Unit = {
       val testCases = Seq(
-        (12345, 6789, Opcode.ADD_U32, 19134, false, false, false), // Unisigned Addition
-        (25000, 15000, Opcode.ADD_U32, 40000, false, false, false), // Unsigned Addition
+        (123, 678, Opcode.ADD_U32, 801, false, false, false),  // Unsigned Addition
+        (250, 150, Opcode.ADD_U32, 400, false, false, false), // Unsigned Addition
 
-        (12345, 6789, Opcode.SUB_U32, 19134, false, false, false),//UnSigned Subtraction
-        (12345, 6789, Opcode.SUB_U32, 19134, false, false, false),//UnSigned Subtraction
+        (1234, 789, Opcode.SUB_U32, 445, false, false, false),  //UnSigned Subtraction
+        (2500, 150, Opcode.SUB_U32, 2350, false, false, false),  //UnSigned Subtraction
 
-        (12345, 6789, Opcode.ADD_S32, 19134, false, false, false),//Signed Addition 
-        (12345, 6789, Opcode.ADD_S32, 19134, false, false, false),//Signed Addition 
+        (123, 678, Opcode.ADD_S32, 801, false, false, false),  //Signed Addition 
+        (250, 150, Opcode.ADD_S32, 400, false, false, false),  //Signed Addition
+         
+        (167, 123, Opcode.SUB_S32, 44, false, false, false),  //Signed Subtraction
+        (250, 150, Opcode.SUB_S32, 100, false, false, false),  //Signed Subtraction
 
-        (12345, 6789, Opcode.ADD_S32, 19134, false, false, false),//Signed Subtraction
-        (12345, 6789, Opcode.ADD_S32, 19134, false, false, false),//Signed Subtraction
 
-        
         //(40000, 15000, Opcode.ADD_U32, 25000, false, false, false),  // Subtraction
         //(500000, 123456, Opcode.ADD_U32, 623456, false, false, false), // Addition
         //(1000000, 500000, Opcode.ADD_U32, 500000, false, false, false) // Subtraction
