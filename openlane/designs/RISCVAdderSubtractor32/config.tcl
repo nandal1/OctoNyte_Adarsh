@@ -1,12 +1,12 @@
-# config.tcl - OpenLane design configuration for SevenSegmentDisplay
+# config.tcl - OpenLane design configuration for RISCVAdderSubtractor32
 
 # Set the design name and top module
-set ::env(DESIGN_NAME) "SevenSegmentDisplay"
-set ::env(DESIGN_TOP) "SevenSegmentDisplay"  ;# Change this to match your top module name
+set ::env(DESIGN_NAME) "RISCVAdderSubtractor32"
+set ::env(DESIGN_TOP) "RISCVAdderSubtractor32"  ;# Change this to match your top module name
 
 # List of Verilog source files (use full paths if needed)
 set ::env(VERILOG_FILES) {
-    "/openlane/designs/SevenSegmentDisplay/src/SevenSegmentDisplay.v"
+    "/openlane/designs/RISCVAdderSubtractor32/src/RISCVAdderSubtractor32.v"
 }
 
 # (Optional) Clock and timing information if your design requires it
@@ -14,10 +14,10 @@ set ::env(CLOCK_PORT) "clock"
 set ::env(CLOCK_PERIOD) 10
 
 # Override PDN pitch to avoid a too-small grid (minimum required is 6.6)
-set ::env(PDN_PITCH) 7.0
+#set ::env(PDN_PITCH) 7.0
 
 # Adjust floorplan parameters to force a larger core area
-set ::env(FP_CORE_UTIL) 0.2
+#set ::env(FP_CORE_UTIL) 0.2
 
 # (Optional) Constraint files if you have them, to avoid warnings.
 set constraint_dir "/openlane/common_constraints"
