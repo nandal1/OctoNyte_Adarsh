@@ -1,4 +1,4 @@
-// Licensed under the BSD 3-Clause License. 
+ // Licensed under the BSD 3-Clause License. 
 // See https://opensource.org/licenses/BSD-3-Clause for details.
 
 package OctoNyte.ExecutionUnits
@@ -226,20 +226,22 @@ class RISCVAdderSubtractor32Test2 extends AnyFlatSpec {
     }
     def testAdd(): Unit = {
       val testCases = Seq(
-        (123, 678, Opcode.ADD_U32, 801, false, false, false),  // Addition
-        (250, 150, Opcode.ADD_U32, 400, false, false, false), // Addition
+        (123, 678, Opcode.ADD_U32, 801, false, false, false),  // Unsigned Addition
+        (250, 150, Opcode.ADD_U32, 400, false, false, false), // Unsigned Addition
+
         (1234, 789, Opcode.SUB_U32, 445, false, false, false),  //UnSigned Subtraction
         (2500, 150, Opcode.SUB_U32, 2350, false, false, false),  //UnSigned Subtraction
+
         (123, 678, Opcode.ADD_S32, 801, false, false, false),  //Signed Addition 
-        (250, 150, Opcode.ADD_S32, 400, false, false, false),  //Signed Addition 
+        (250, 150, Opcode.ADD_S32, 400, false, false, false),  //Signed Addition
+         
         (167, 123, Opcode.SUB_S32, 44, false, false, false),  //Signed Subtraction
         (250, 150, Opcode.SUB_S32, 100, false, false, false),  //Signed Subtraction
 
-        //(40000.U, 15000.U, Opcode.ADD_U32, 25000.U, false, false, false),  // Subtraction
-        //(500000.U, 123456.U, Opcode.ADD_U32, 623456.U, false, false, false), // Addition
-        //(1000000.U, 500000.U, Opcode.ADD_U32, 500000.U, false, false, false) // Subtraction
 
-        //test commit
+        //(40000, 15000, Opcode.ADD_U32, 25000, false, false, false),  // Subtraction
+        //(500000, 123456, Opcode.ADD_U32, 623456, false, false, false), // Addition
+        //(1000000, 500000, Opcode.ADD_U32, 500000, false, false, false) // Subtraction
       )
     for ((a, b, opcode, expected, expectedFlag, expectedZeroFlag, expectedNegativeFlag) <- testCases) {
         testOperation(BigInt(a), BigInt(b), opcode, BigInt(expected), expectedFlag, expectedZeroFlag, expectedNegativeFlag)
