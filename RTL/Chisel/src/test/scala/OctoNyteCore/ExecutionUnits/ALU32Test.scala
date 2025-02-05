@@ -73,6 +73,7 @@ class ALU32Test extends AnyFlatSpec {
           ALU32.Opcode.SLL_U8, ALU32.Opcode.SLL_U16, ALU32.Opcode.SLL_U32,
           ALU32.Opcode.SRL_U8, ALU32.Opcode.SRL_U16, ALU32.Opcode.SRL_U32,
           ALU32.Opcode.SRA_U8, ALU32.Opcode.SRA_U16, ALU32.Opcode.SRA_U32
+          //Test Adding repository to SP25 branch
         )
 
         for (opcode <- opcodes) {
