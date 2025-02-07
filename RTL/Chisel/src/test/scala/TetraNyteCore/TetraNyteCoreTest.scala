@@ -6,27 +6,35 @@
 package TetraNyte
 
 import chisel3._
+import chisel3.util._
 import chisel3.simulator.EphemeralSimulator._
 import org.scalatest.flatspec.AnyFlatSpec
 import TetraNyte.TetraNyteCore
 
 class TetraNyteCoreTest extends AnyFlatSpec {
 
-  "TetraNyteCore" should "fill the pipeline by around cycle 6 and run for a few steps" in {
+  "TetraNyteCore" should "fill the 4-stage pipeline and run for a few cycles" in {
     simulate(new TetraNyteCore) { dut =>
-
+      
+      // Preload instruction memory with NOPs (encoded as 0x00000013)
+      // We write into the instruction memory using the I/O signals.
       for (addr <- 0 until 16) {
-        // Write NOP (0x13) into instrMem at address 'addr'
         dut.io.instrWriteAddr.poke(addr.U)
-        dut.io.instrWriteData.poke(0x00000013.U)
+        dut.io.instrWriteData.poke(0x00000013.U(32.W))
         dut.io.instrWriteEnable.poke(true.B)
-        dut.clock.step(1)  // advance one cycle so the write occurs
-
-        // Turn off writeEnable
+        dut.clock.step(1)  // perform the write
         dut.io.instrWriteEnable.poke(false.B)
         dut.clock.step(1)
- 
-        
+      }
+      
+      // Now run the core for a number of cycles.
+      // The debug prints inside TetraNyteCore should show the pipeline state.
+      for (cycle <- 0 until 12) {
+        println(s"--- Cycle $cycle ---")
+        dut.clock.step(1)
+        // Example: Peek at the memory address output (in hex)
+        val memAddr = dut.io.memAddr.peek().litValue
+        println(s"Memory Address: 0x${memAddr.toString(16)}")
       }
     }
   }
