@@ -1,38 +1,63 @@
 # Single Issue OctoNyte Pipeline
 
-|       | 0    | 1       | 2     | 3     | 4    | 5    | 6    | 7    | 8    |
-| ----- | ---- | ------- | ----- | ----- | ---- | ---- | ---- | ---- | ---- |
-| Ld/St | Dec  | RF Read | Agen  | Mem1  | WB   |      |      |      |      |
-| ALU   | Dec  | RF Read | Exec1 | Exec2 | WB   |      |      |      |      |
+|       | 0    | 1      | 2    | 3      | 4    | 5    | 6    | 7    | 8    |
+| ----- | ---- | ------ | ---- | ------ | ---- | ---- | ---- | ---- | ---- |
+| Load  | F    | Dec+RF | Agen | Mem+WB |      |      |      |      |      |
+| Store | F    | Dec+RF | Agen | Mem    |      |      |      |      |      |
+| ALU   | F    | Dec+RF | Exec | WB     |      |      |      |      |      |
+| BR    | F    | Dec+RF | Agen | PC     |      |      |      |      |      |
 
 
+
+## Loads
 
 Now let's consider the case of single-issue with 4 threads.
 
-|      | 0    | 1       | 2       | 3       | 4       | 5       | 6       | 7       | 8       | 9    | 10   | 11   |
-| ---- | ---- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ---- | ---- | ---- |
-| T1   | Dec  | RF Read | Agen    | Mem     | WB      |         |         |         |         |      |      |      |
-| T2   |      | Dec     | RF Read | Agen    | Mem     | WB      |         |         |         |      |      |      |
-| T3   |      |         | Dec     | RF Read | Agen    | Mem     | WB      |         |         |      |      |      |
-| T4   |      |         |         | Dec     | RF Read | Agen    | Mem     | WB      |         |      |      |      |
-| T1   |      |         |         |         | Dec     | RF Read | Agen    | Mem     | WB      |      |      |      |
-| T2   |      |         |         |         |         | Dec     | RF Read | Agen    | Mem     | WB   |      |      |
-| T3   |      |         |         |         |         |         | Dec     | RF Read | Agen    | Mem1 | WB   |      |
-| T4   |      |         |         |         |         |         |         | Dec     | RF Read | Agen | Mem1 | WB   |
+|      | 0    | 1      | 2      | 3      | 4      | 5      | 6      | 7      | 8      | 9      | 10     | 11   |      |      |
+| ---- | ---- | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ---- | ---- | ---- |
+| T0   | F    | Dec+RF | Agen   | Mem+WB |        |        |        |        |        |        |        |      |      |      |
+| T1   |      | F      | Dec+RF | Agen   | Mem+WB |        |        |        |        |        |        |      |      |      |
+| T2   |      |        | F      | Dec+RF | Agen   | Mem+WB |        |        |        |        |        |      |      |      |
+| T3   |      |        |        | F      | Dec+RF | Agen   | Mem+WB |        |        |        |        |      |      |      |
+| T0   |      |        |        |        | F      | Dec+RF | Agen   | Mem+WB |        |        |        |      |      |      |
+| T1   |      |        |        |        |        | F      | Dec+RF | Agen   | Mem+WB |        |        |      |      |      |
+| T2   |      |        |        |        |        |        | F      | Dec+RF | Agen   | Mem+WB |        |      |      |      |
+| T3   |      |        |        |        |        |        |        | F      | Dec+RF | Agen   | Mem+WB |      |      |      |
 
-With this pipeline and 4 threads, the second T1 instruction that issues in clock cycle 4 completes its WB stage before the RF read. Further, after the pipeline fills, each execution unit is completely utilized without structural hazards.
+After the pipeline fills, each execution unit is completely utilized without structural hazards.
 
 
 
 The pipeline per thread appears as:
 
-|       | 0    | 1       | 2    | 3    | 4    | 5       | 6     | 7     | 8    | 9       | 10    | 11    | 12   |
-| ----- | ---- | ------- | ---- | ---- | ---- | ------- | ----- | ----- | ---- | ------- | ----- | ----- | ---- |
-| Ld/St | Dec  | RF Read | Agen | Mem  | WB   |         |       |       |      |         |       |       |      |
-| ALU   |      |         |      |      | Dec  | RF Read | Exec1 | Exec2 | WB   |         |       |       |      |
-| ALU   |      |         |      |      |      |         |       |       | Dec  | RF Read | Exec1 | Exec2 | WB   |
+|      | 0    | 1      | 2    | 3      | 4    | 5      | 6    | 7      | 8    | 9      | 10   | 11     | 12   |
+| ---- | ---- | ------ | ---- | ------ | ---- | ------ | ---- | ------ | ---- | ------ | ---- | ------ | ---- |
+| Load | F    | Dec+RF | Agen | Mem+WB |      |        |      |        |      |        |      |        |      |
+| Load |      |        |      |        | F    | Dec+RF | Agen | Mem+WB |      |        |      |        |      |
+| Load |      |        |      |        |      |        |      |        | F    | Dec+RF | Agen | Mem+WB |      |
 
 
+
+## Arbitrary Instruction Mix
+
+|           | 0    | 1      | 2      | 3      | 4      | 5      | 6      | 7      | 8      | 9      | 10   |
+| --------- | ---- | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ---- |
+| T0: Load  | F    | Dec+RF | Agen   | Mem+WB |        |        |        |        |        |        |      |
+| T1: ALU   |      | F      | Dec+RF | Exec   | WB     |        |        |        |        |        |      |
+| T2: Load  |      |        | F      | Dec+RF | Agen   | Mem+WB |        |        |        |        |      |
+| T3: BR    |      |        |        | F      | Dec+RF | Agen   | PC     |        |        |        |      |
+| T0: ALU   |      |        |        |        | F      | Dec+RF | Exec   | WB     |        |        |      |
+| T1: BR    |      |        |        |        |        | F      | Dec+RF | Agen   | PC     |        |      |
+| T2: Load  |      |        |        |        |        |        | F      | Dec+RF | Agen   | Mem+WB |      |
+| T3: Store |      |        |        |        |        |        |        | F      | Dec+RF | Agen   | Mem  |
+
+## Thread Cycles
+
+Each thread cycle is exactly 4 clock cycles
+
+## Interrupts
+
+This pipeline allows us to check for interrupts at the beginning of each thread cycle without loss of state. It also allows for up to 4 interrupts to be simultaneously processed.
 
 
 
