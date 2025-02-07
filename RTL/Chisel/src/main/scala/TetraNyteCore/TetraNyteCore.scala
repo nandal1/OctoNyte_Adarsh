@@ -10,12 +10,12 @@ import TetraNyte.PipelineHelpers.updatePipelineStage
 
 /** 
   * TetraNyteCore implements a 4-stage pipeline:
-  * 1. IF (Fetch)
-  * 2. DEC/RF (Decode + Register File Read)
-  * 3. EX (Execute)
-  * 4. MEM/WB (Memory Access and Write-Back)
+  *   1. IF (Fetch)
+  *   2. DEC/RF (Decode + Register File Read)
+  *   3. EX (Execute)
+  *   4. MEM/WB (Memory Access and Write-Back)
   *
-  * It uses a multi-threaded 2-read/1-write register file implemented as a Vec of registers
+  * It uses a multithreaded register file implemented as a Vec of registers 
   * (RegFileMT2R1WVec).
   */
 class TetraNyteCore extends Module {
@@ -28,7 +28,7 @@ class TetraNyteCore extends Module {
 
     // Instruction memory write interface (for testbench initialization)
     val instrWriteEnable = Input(Bool())
-    val instrWriteAddr   = Input(UInt(10.W))  // e.g. 1024 = 2^10 depth
+    val instrWriteAddr   = Input(UInt(10.W))  // e.g. depth=1024 => 10 bits
     val instrWriteData   = Input(UInt(32.W))
   })
 
@@ -36,24 +36,23 @@ class TetraNyteCore extends Module {
   val numThreads = 4
   val threadBits = log2Ceil(numThreads)
 
-  // Round-robin pointer for scheduling threads
+  // Round-robin pointer for thread scheduling.
   val currentThread = RegInit(0.U(threadBits.W))
   currentThread := currentThread + 1.U
 
-  // Per-thread program counter (PC)
+  // Per-thread PC register.
   val pcRegs = RegInit(VecInit(Seq.fill(numThreads)(0.U(32.W))))
 
-  // Instruction memory (synchronous)
+  // Instruction memory (synchronous).
   val instrMem = SyncReadMem(1024, UInt(32.W))
   when(io.instrWriteEnable) {
     instrMem.write(io.instrWriteAddr, io.instrWriteData)
   }
 
-  // Multi-threaded 2-read/1-write register file implemented as a vector of registers.
-  // (Assume RegFileMT2R1WVec is defined with an I/O interface similar to the SRAM version.)
+  // Instantiate the multithreaded register file as a Vec of registers.
   val regFile = Module(new RegFileMT2R1WVec(width = 32, depth = 32, numThreads = numThreads))
 
-  // A minimal ALU module (for example purposes)
+  // A minimal ALU module.
   class AluIO extends Bundle {
     val a   = Input(UInt(32.W))
     val b   = Input(UInt(32.W))
@@ -67,15 +66,15 @@ class TetraNyteCore extends Module {
     switch(fn) {
       is(0.U) { out := a + b }  // ADD
       is(1.U) { out := a - b }  // SUB
-      // Additional operations can be added as needed.
+      // Additional operations can be added here.
     }
   })
 
   //==========================================================================
-  // Pipeline register definitions (one for each stage)
-  // We use a "full" PipelineRegBundle that carries all possible fields.
-  // For a 4-stage pipeline we need:
-  //   ifStage, decStage, exStage, memStage.
+  // Pipeline Registers: one for each stage.
+  // We use the full PipelineRegBundle for all stages.
+  // For a 4-stage pipeline, we need:
+  //   ifStage, decStage, exStage, and memStage.
   //==========================================================================
   val ifStage  = RegInit(VecInit(Seq.fill(numThreads)(0.U.asTypeOf(new PipelineRegBundle))))
   val decStage = RegInit(VecInit(Seq.fill(numThreads)(0.U.asTypeOf(new PipelineRegBundle))))
@@ -85,29 +84,30 @@ class TetraNyteCore extends Module {
   //==========================================================================
   // 1) IF Stage: Instruction Fetch
   //==========================================================================
-  val ifWire = Wire(new PipelineRegBundle)
+  // Use WireInit so that all fields are initialized.
+  val ifWire = WireInit(0.U.asTypeOf(new PipelineRegBundle))
   ifWire.threadId := currentThread
   ifWire.valid    := true.B
   ifWire.pc       := pcRegs(currentThread)
   ifWire.instr    := instrMem.read(pcRegs(currentThread) >> 2)
-  // (Other fields remain at default zero)
+  // (Other fields remain at their default zero)
 
   // Update PC: naive next-PC = PC + 4
   pcRegs(currentThread) := pcRegs(currentThread) + 4.U
 
-  // Latch IF stage for the current thread
+  // Latch IF stage for the current thread.
   ifStage(currentThread) := ifWire
 
-  // Push IF stage into the DEC/RF stage
+  // Push IF stage into the DEC/RF stage.
   updatePipelineStage(currentThread, ifStage, decStage)
 
   //==========================================================================
-  // 2) DEC/RF Stage: Decode the instruction and perform register file read
+  // 2) DEC/RF Stage: Decode the instruction and perform register file read.
   //==========================================================================
-  val decWire = Wire(new PipelineRegBundle)
-  decWire := decStage(currentThread) // Start with the contents coming from IF
+  val decWire = WireInit(0.U.asTypeOf(new PipelineRegBundle))
+  decWire := decStage(currentThread) // Start with the data from IF.
 
-  // Decode: determine instruction type and set control signals.
+  // Basic decode: check opcode.
   val opcode = decWire.instr(6, 0)
   when(opcode === "b0110011".U) { // R-type
     decWire.isALU := true.B
@@ -116,28 +116,23 @@ class TetraNyteCore extends Module {
   } .elsewhen(opcode === "b0100011".U) { // Store
     decWire.isStore := true.B
   }
-  // (Additional decoding as required can be added here)
-
-  // Set register addresses from the instruction fields.
+  // Set register file addresses.
   decWire.rs1 := decWire.instr(19, 15)
   decWire.rs2 := decWire.instr(24, 20)
   decWire.rd  := decWire.instr(11, 7)
 
-  // Latch the updated decode information into the decStage register.
+  // Latch the decode results.
   decStage(currentThread) := decWire
 
-  // Now perform register file read.
+  // Now perform the register file read.
   regFile.io.threadID := currentThread
   regFile.io.src1     := decWire.rs1
   regFile.io.src2     := decWire.rs2
-  // (Write port will be driven later in the MEM/WB stage.)
-
-  // Because regFile is implemented as a Vec(Reg(...)), assume its read ports are combinational.
-  // Thus, we can directly capture the register data in decWire.
+  // The register file is implemented as a Vec(Reg(...)), so its read is combinational.
   decWire.rs1Data := regFile.io.src1data
   decWire.rs2Data := regFile.io.src2data
 
-  // Latch the results back into decStage.
+  // Latch the updated results.
   decStage(currentThread) := decWire
 
   // Push DEC/RF stage into the EX stage.
@@ -146,54 +141,52 @@ class TetraNyteCore extends Module {
   //==========================================================================
   // 3) EX Stage: Execute (ALU operations, address generation)
   //==========================================================================
-  val exWire = Wire(new PipelineRegBundle)
-  exWire := exStage(currentThread)  // Get data from the previous stage
+  val exWire = WireInit(0.U.asTypeOf(new PipelineRegBundle))
+  exWire := exStage(currentThread) // Get inputs from DEC/RF stage.
 
   // Perform ALU operation for ALU-type instructions.
   alu.io.a  := exWire.rs1Data
-  // For simplicity, we assume ALU-type uses register-register; for load immediate,
-  // one might choose between imm and rs2Data.
-  alu.io.b  := exWire.rs2Data
-  alu.io.fn := exWire.aluOp // Control signal set during decode
+  alu.io.b  := exWire.rs2Data  // For simplicity, using rs2Data; add logic for immediates if needed.
+  alu.io.fn := exWire.aluOp  // Control signal should have been set during decode.
 
   exWire.aluResult := alu.io.out
 
-  // For load/store, compute the effective address.
+  // For load/store instructions, compute effective address.
   when(exWire.isLoad || exWire.isStore) {
     exWire.memAddr  := exWire.rs1Data + exWire.imm
     exWire.memWdata := exWire.rs2Data
   }
 
-  // Latch the EX stage results.
+  // Latch EX stage results.
   exStage(currentThread) := exWire
 
   // Push EX stage into the MEM/WB stage.
   updatePipelineStage(currentThread, exStage, memStage)
 
   //==========================================================================
-  // 4) MEM/WB Stage: Memory Access and Write-Back
+  // 4) MEM/WB Stage: Memory Access and Write-Back.
   //==========================================================================
-  val memWire = Wire(new PipelineRegBundle)
+  val memWire = WireInit(0.U.asTypeOf(new PipelineRegBundle))
   memWire := memStage(currentThread)
 
-  // Memory operations:
+  // Memory access.
   io.memAddr  := memWire.memAddr
   io.memWdata := memWire.memWdata
   io.memWe    := memWire.isStore && memWire.valid
 
-  // Assume that for loads, the memory returns data in the same cycle.
+  // Assume for loads that data is returned in the same cycle.
   memWire.memRdata := io.memRdata
 
-  // Write-back: For load instructions, the value to write is memRdata; for ALU
-  // instructions, it is aluResult.
+  // Write-back: For a load, write memRdata; for an ALU instruction, use aluResult.
   val wbData = Mux(memWire.isLoad, memWire.memRdata, memWire.aluResult)
   regFile.io.dst1     := memWire.rd
   regFile.io.dst1data := wbData
   regFile.io.wen      := memWire.valid && (memWire.rd =/= 0.U) &&
                          (memWire.isLoad || memWire.isALU)
 
-  // Latch the final MEM/WB stage (no further pipeline push).
+  // Latch MEM/WB stage results.
   memStage(currentThread) := memWire
+  // (No further stage to update.)
 
   //==========================================================================
   // Debug Printouts
