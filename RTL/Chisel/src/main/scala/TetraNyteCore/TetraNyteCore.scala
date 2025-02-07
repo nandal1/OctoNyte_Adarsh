@@ -211,22 +211,22 @@ class TetraNyteCore extends Module {
   // }
 
   // Compute the active thread for each stage.
-  when(io.debug)
-  {
-    val activeIF  = currentThread  // current thread fetches
-    val activeDEC = (currentThread + (numThreads.U - 1.U)) % numThreads.U
-    val activeEX  = (currentThread + (numThreads.U - 2.U)) % numThreads.U
-    val activeMEM = (currentThread + (numThreads.U - 3.U)) % numThreads.U
+  // when(io.debug)
+  // {
+  //   val activeIF  = currentThread  // current thread fetches
+  //   val activeDEC = (currentThread + (numThreads.U - 1.U)) % numThreads.U
+  //   val activeEX  = (currentThread + (numThreads.U - 2.U)) % numThreads.U
+  //   val activeMEM = (currentThread + (numThreads.U - 3.U)) % numThreads.U
 
-    // Print debug information only for the active pipeline register in each stage.
-    printf("Cycle %d:\n", RegNext(RegNext(0.U)))
-    printf("  IF  (T%d): { pc: 0x%x, instr: 0x%x }\n",
-          activeIF, ifStage(activeIF).pc, ifStage(activeIF).instr)
-    printf("  DEC (T%d): { pc: 0x%x, rs1: 0x%x, rs2: 0x%x, rd: 0x%x }\n",
-          activeDEC, decStage(activeDEC).pc, decStage(activeDEC).rs1, decStage(activeDEC).rs2, decStage(activeDEC).rd)
-    printf("  EX  (T%d): { aluResult: 0x%x, memAddr: 0x%x }\n",
-          activeEX, exStage(activeEX).aluResult, exStage(activeEX).memAddr)
-    printf("  MEM (T%d): { memWdata: 0x%x, memRdata: 0x%x }\n\n",
-          activeMEM, memStage(activeMEM).memWdata, memStage(activeMEM).memRdata)
-  }
+  //   // Print debug information only for the active pipeline register in each stage.
+  //   printf("Cycle %d:\n", RegNext(RegNext(0.U)))
+  //   printf("  IF  (T%d): { pc: 0x%x, instr: 0x%x }\n",
+  //         activeIF, ifStage(activeIF).pc, ifStage(activeIF).instr)
+  //   printf("  DEC (T%d): { pc: 0x%x, rs1: 0x%x, rs2: 0x%x, rd: 0x%x }\n",
+  //         activeDEC, decStage(activeDEC).pc, decStage(activeDEC).rs1, decStage(activeDEC).rs2, decStage(activeDEC).rd)
+  //   printf("  EX  (T%d): { aluResult: 0x%x, memAddr: 0x%x }\n",
+  //         activeEX, exStage(activeEX).aluResult, exStage(activeEX).memAddr)
+  //   printf("  MEM (T%d): { memWdata: 0x%x, memRdata: 0x%x }\n\n",
+  //         activeMEM, memStage(activeMEM).memWdata, memStage(activeMEM).memRdata)
+  // }
 }
