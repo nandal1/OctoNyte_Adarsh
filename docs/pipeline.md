@@ -65,14 +65,28 @@ This pipeline allows us to check for interrupts at the beginning of each thread 
 
 Due to the long latency of accessing Vector memory, an 8-threaded design allows cache bypassing with additional cycles for accessing memory.
 
-|       | 0    | 1        | 2     | 3     | 4       | 5    | 6    | 7    | 8    |
-| ----- | ---- | -------- | ----- | ----- | ------- | ---- | ---- | ---- | ---- |
-| Ld/St | Dec  | RF Read  | Agen  | XFer  | Int Ext | Mem0 | Mem1 | Mem2 | WB   |
-| ALU   | Dec  | RF Read  | Exec1 | Exec2 | XFer    | WB   |      |      |      |
-| I_Mul | Dec  | RF Read  | Exec1 | Exec2 | Exec3   | XFer | WB   |      |      |
-| V_Mul | Dec  | VRF Read | Mul1  | Mul2  | Add1    | Add2 | XFer | WB   |      |
+|       | 0    | 1    | 2        | 3     | 4     | 5     | 6    | 7      | 8    | 9    |
+| ----- | ---- | ---- | -------- | ----- | ----- | ----- | ---- | ------ | ---- | ---- |
+| Ld/St | F    | Dec  | RF Read  | Agen  | Mem0  | Mem1  | Mem2 | WB     |      |      |
+| ALU   | F    | Dec  | RF Read  | Exec1 | Exec2 | WB    |      |        |      |      |
+| I_Mul | F    | Dec  | RF Read  | Exec1 | Exec2 | Exec3 | WB   |        |      |      |
+| V_Mul | F    | Dec  | VRF Read | Mul1  | Mul2  | Add1  | Add2 | VRF WB |      |      |
 
 
+
+## Load Pipeline
+
+|      | 0    | 1    | 2       | 3       | 4       | 5       | 6       | 7       | 8       | 9       | 10      | 11      |         |         |      |      |      |      |
+| ---- | ---- | ---- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ---- | ---- | ---- | ---- |
+| T0   | F    | Dec  | RF Read | Agen    | Mem0    | Mem1    | Mem2    | WB      |         |         |         |         |         |         |      |      |      |      |
+| T1   |      | F    | Dec     | RF Read | Agen    | XFer    | Int Ext | Mem0    | Mem1    | Mem2    | WB      |         |         |         |      |      |      |      |
+| T2   |      |      | F       | Dec     | RF Read | Agen    | XFer    | Int Ext | Mem0    | Mem1    | Mem2    | WB      |         |         |      |      |      |      |
+| T3   |      |      |         | F       | Dec     | RF Read | Agen    | XFer    | Int Ext | Mem0    | Mem1    | Mem2    | WB      |         |      |      |      |      |
+| T4   |      |      |         |         | F       | Dec     | RF Read | Agen    | XFer    | Int Ext | Mem0    | Mem1    | Mem2    | WB      |      |      |      |      |
+| T5   |      |      |         |         |         | F       | Dec     | RF Read | Agen    | XFer    | Int Ext | Mem0    | Mem1    | Mem2    | WB   |      |      |      |
+| T6   |      |      |         |         |         |         | F       | Dec     | RF Read | Agen    | XFer    | Int Ext | Mem0    | Mem1    | Mem2 | WB   |      |      |
+| T7   |      |      |         |         |         |         |         | F       | Dec     | RF Read | Agen    | XFer    | Int Ext | Mem0    | Mem1 | Mem2 | WB   |      |
+| T0   |      |      |         |         |         |         |         |         | F       | Dec     | RF Read | Agen    | XFer    | Int Ext | Mem0 | Mem1 | Mem2 | WB   |
 
 # Instruction Issue
 
