@@ -18,6 +18,7 @@ class TetraNyteCoreTest extends AnyFlatSpec {
       
       // Preload instruction memory with NOPs (encoded as 0x00000013)
       // We write into the instruction memory using the I/O signals.
+      dut.io.debug.poke(false.B)
       for (addr <- 0 until 16) {
         dut.io.instrWriteAddr.poke(addr.U)
         dut.io.instrWriteData.poke(0x00000013.U(32.W))
@@ -29,6 +30,7 @@ class TetraNyteCoreTest extends AnyFlatSpec {
       
       // Now run the core for a number of cycles.
       // The debug prints inside TetraNyteCore should show the pipeline state.
+      dut.io.debug.poke(true.B)
       for (cycle <- 0 until 12) {
         println(s"--- Cycle $cycle ---")
         dut.clock.step(1)
