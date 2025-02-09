@@ -1,44 +1,42 @@
-#include <windows.h>
 #include <iostream>
 #include <fstream>
 #include <thread>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 
-#define PIPE_NAME R"(\\.\pipe\spike_rtl_pipe)"
-#define MAX_RETRIES 5
+#define PIPE_NAME "../pipe/spike_rtl_pipe"
 
 void log_message(const std::string& msg) {
     std::ofstream log("spike_log.txt", std::ios::app);
     log << msg << std::endl;
 }
 
-void send_instruction(const std::string& instruction) {
-    HANDLE hPipe;
-    int retries = 0;
-
-    // Retry logic if the pipe isn't ready
-    while (retries < MAX_RETRIES) {
-        hPipe = CreateFileA(PIPE_NAME, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
-        if (hPipe != INVALID_HANDLE_VALUE) break;  
-        
-        std::cerr << "Pipe not ready. Retrying (" << retries + 1 << "/" << MAX_RETRIES << ")..." << std::endl;
-        log_message("Retrying pipe connection...");
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        retries++;
+void create_fifo() {
+    if (mkfifo(PIPE_NAME, 0666) == -1) {
+        if (errno != EEXIST) {
+            std::cerr << "Failed to create FIFO: " << strerror(errno) << std::endl;
+            log_message("Failed to create FIFO");
+            exit(1);
+        }
     }
+}
 
-    if (hPipe == INVALID_HANDLE_VALUE) {
-        std::cerr << "Error: Unable to open pipe after retries." << std::endl;
+void send_instruction(const std::string& instruction) {
+    int pipe_fd = open(PIPE_NAME, O_WRONLY);
+    if (pipe_fd == -1) {
+        std::cerr << "Error: Unable to open pipe." << std::endl;
         log_message("Error: Failed to open pipe.");
         return;
     }
 
-    DWORD bytesWritten;
-    WriteFile(hPipe, instruction.c_str(), instruction.size(), &bytesWritten, NULL);
+    write(pipe_fd, instruction.c_str(), instruction.size());
     log_message("Sent instruction: " + instruction);
-    CloseHandle(hPipe);
+    close(pipe_fd);
 }
 
 int main() {
+    create_fifo();
     std::string instruction = "ADD x1, x2, x3";
     send_instruction(instruction);
     return 0;
