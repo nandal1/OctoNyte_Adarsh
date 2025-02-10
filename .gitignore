@@ -16,6 +16,9 @@ RTL/verilator_testbench/obj_dir
 RTL/verilator_testbench/*.vcd
 RTL/Chisel/.bsp/sbt.json
 
+# ignore all openlane runs directories
+**/runs/
+
 # Scala-IDE specific
 .scala-build
 .scala_dependencies
@@ -27,3 +30,5 @@ settings.json
 ### Java template
 *.class
 
+.DS_Store
+.vscode/tasks.json
