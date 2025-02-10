@@ -8,58 +8,34 @@ import chisel3.util._
 
 import OctoNyte.ExecutionUnits.RISCVAdderSubtractor32
 
+
+////Test Adding repository to SP25 branch
 // Opcodes
 // b5: arithmetic/logic
 // b1b0: 8/16/32/64 bits
 object ALU32 {
   object Opcode {
-    // Arithmetic Operations
-    // b4: Unused
-    // b3: Add/Sub
-    // b2: Unsigned/Signed
-    val ADD_U8  = "b000000".U
-    val ADD_U16 = "b000001".U
-    val ADD_U32 = "b000010".U
-    //val ADD_U64 = "b000011".U
-    val SUB_U8  = "b001000".U
-    val SUB_U16 = "b001001".U
-    val SUB_U32 = "b001010".U
-    //val SUB_U64 = "b001011".U
-    val ADD_S8  = "b000100".U
-    val ADD_S16 = "b000101".U
-    val ADD_S32 = "b000110".U
-    //val ADD_S64 = "b000111".U
-    val SUB_S8  = "b001100".U
-    val SUB_S16 = "b001101".U
-    val SUB_S32 = "b001110".U
-    //val SUB_S64 = "b001111".U
+    val ADD  = "b00000".U
+    val SUB  = "b00001".U
+    val XOR  = "b01000".U
+    val OR   = "b01100".U
+    val AND  = "b01110".U
+    val SLL  = "b00010".U
+    val SRL  = "b01010".U
+    val SRA  = "b01011".U
+    val SLT  = "b00100".U
+    val SLTU = "b00110".U
 
-    // Logical Operations
-    // b4b3b2: operation
-    val AND_U8  = "b100000".U
-    val AND_U16 = "b100001".U
-    val AND_U32 = "b100010".U
-    //val AND_U64 = "b100011".U
-    val OR_U8   = "b100100".U
-    val OR_U16  = "b100101".U
-    val OR_U32  = "b100110".U
-    //val OR_U64  = "b100111".U
-    val XOR_U8  = "b101000".U
-    val XOR_U16 = "b101001".U
-    val XOR_U32 = "b101010".U
-    //val XOR_U64 = "b101011".U
-    val SLL_U8  = "b101100".U
-    val SLL_U16 = "b101101".U
-    val SLL_U32 = "b101110".U
-    //val SLL_U64 = "b101111".U
-    val SRL_U8  = "b110000".U
-    val SRL_U16 = "b110001".U
-    val SRL_U32 = "b110010".U
-    //val SRL_U64 = "b110011".U
-    val SRA_U8  = "b110000".U
-    val SRA_U16 = "b110001".U
-    val SRA_U32 = "b110010".U
-    //val SRA_U64 = "b110011".U
+    // Immediate Type
+    val ADDI  = "b10000".U
+    val XORI  = "b11000".U
+    val ORI   = "b11100".U
+    val ANDI  = "b11110".U
+    val SLLI  = "b10010".U
+    val SRAL  = "b11010".U
+    val SRAI  = "b11011".U
+    val SLTI  = "b10100".U
+    val SLTUI = "b10110".U
   }
 }
 
