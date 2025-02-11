@@ -67,8 +67,7 @@ class OctoNyteCore(
     m.writeEnable := false.B
 }
 
-
-  // Clock gating logic
+  // Clock gating logic 
   val enableALU = Wire(Bool())
   val enableMul = Wire(Bool())
   val enableVec = Wire(Bool())

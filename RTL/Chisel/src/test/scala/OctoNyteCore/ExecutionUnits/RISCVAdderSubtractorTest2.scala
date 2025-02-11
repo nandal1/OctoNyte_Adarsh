@@ -9,7 +9,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import OctoNyte.ExecutionUnits.RISCVAdderSubtractor32
 import OctoNyte.ExecutionUnits.RISCVAdderSubtractor32.Opcode
 
-class RISCVAdderSubtractor32Test2 extends AnyFlatSpec {
+class RISCVAdderSubtractorTest2 extends AnyFlatSpec {
   "RISCVAdderSubtractor32" should "correctly compute addition and subtraction" in {
     simulate(new RISCVAdderSubtractor32) { dut =>
       val printDebugInfo = false
