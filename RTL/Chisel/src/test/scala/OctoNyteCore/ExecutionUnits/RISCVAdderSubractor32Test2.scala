@@ -239,7 +239,6 @@ class RISCVAdderSubtractor32Test2 extends AnyFlatSpec {
         (250, 150, Opcode.SUB_S32, 100, false, false, false),  //Signed Subtraction
 
 
-        
         //(40000, 15000, Opcode.ADD_U32, 25000, false, false, false),  // Subtraction
         //(500000, 123456, Opcode.ADD_U32, 623456, false, false, false), // Addition
         //(1000000, 500000, Opcode.ADD_U32, 500000, false, false, false) // Subtraction
