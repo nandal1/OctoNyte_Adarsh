@@ -66,6 +66,7 @@ class ALU32Test extends AnyFlatSpec {
             case x if x == Opcode.SRA.litValue.toInt => (a.toInt >> (b & 0x1F)) & 0xFFFFFFFFL
           }
           testOperation(a, b, opcode, expected, false, expected == 0, expected < 0)
+          //Merging changes
         }
       }
     }
