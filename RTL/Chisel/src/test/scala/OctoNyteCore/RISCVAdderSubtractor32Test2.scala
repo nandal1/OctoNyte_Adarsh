@@ -245,7 +245,6 @@ class RISCVAdderSubtractor32Test2 extends AnyFlatSpec {
       )
     for ((a, b, opcode, expected, expectedFlag, expectedZeroFlag, expectedNegativeFlag) <- testCases) {
         testOperation(BigInt(a), BigInt(b), opcode, BigInt(expected), expectedFlag, expectedZeroFlag, expectedNegativeFlag)
-        //updating test according to updated opcodes
     }
   }
     }
