@@ -8,7 +8,7 @@ wget --no-check-certificate https://repo.anaconda.com/archive/Anaconda3-2024.10-
     rm /tmp/anaconda.sh
 
 # Add Anaconda to the PATH
-ENV PATH="/opt/conda/bin:$PATH"
+PATH="/opt/conda/bin:${PATH}"
 
 
 # Install g++14

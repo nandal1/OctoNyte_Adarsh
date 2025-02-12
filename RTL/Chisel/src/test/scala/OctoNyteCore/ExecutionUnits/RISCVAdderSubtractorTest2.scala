@@ -1,4 +1,4 @@
-// Licensed under the BSD 3-Clause License. 
+ // Licensed under the BSD 3-Clause License. 
 // See https://opensource.org/licenses/BSD-3-Clause for details.
 
 package OctoNyte.ExecutionUnits
@@ -6,15 +6,16 @@ package OctoNyte.ExecutionUnits
 import chisel3._
 import chisel3.simulator.EphemeralSimulator._
 import org.scalatest.flatspec.AnyFlatSpec
-import scabook.addersubtractors.MultifunctionAdderSubtractor64.Opcode
+import OctoNyte.ExecutionUnits.RISCVAdderSubtractor32
+import OctoNyte.ExecutionUnits.RISCVAdderSubtractor32.Opcode
 
-class RISCVAdderSubtractor32Test extends AnyFlatSpec {
-
-  "RISCVAdderSubtractor32" should "correctly compute addition and subtraction for all opcodes and handle overflow/underflow with truncation" in {
+class RISCVAdderSubtractorTest2 extends AnyFlatSpec {
+  "RISCVAdderSubtractor32" should "correctly compute addition and subtraction" in {
     simulate(new RISCVAdderSubtractor32) { dut =>
       val printDebugInfo = false
 
       testArithmetic()
+      testAdd()
 
       def testOperation(a: BigInt, b: BigInt, opcode: UInt, expected: BigInt, 
                         expectedFlag: Boolean, expectedZeroFlag: Boolean, expectedNegativeFlag: Boolean): Unit = {
@@ -22,12 +23,12 @@ class RISCVAdderSubtractor32Test extends AnyFlatSpec {
 
         if (isSigned) {
           // Handle signed inputs
-          dut.io.a.poke(a.S(64.W).asUInt) // Convert signed BigInt to SInt, then to UInt
-          dut.io.b.poke(b.S(64.W).asUInt) // Convert signed BigInt to SInt, then to UInt
+          dut.io.a.poke(a.S(32.W).asUInt) // Convert signed BigInt to SInt, then to UInt
+          dut.io.b.poke(b.S(32.W).asUInt) // Convert signed BigInt to SInt, then to UInt
         } else {
           // Handle unsigned inputs
-          dut.io.a.poke(a.U(64.W)) // Ensure BigInt is treated as non-negative
-          dut.io.b.poke(b.U(64.W))
+          dut.io.a.poke(a.U(32.W)) // Ensure BigInt is treated as non-negative
+          dut.io.b.poke(b.U(32.W))
         }
         dut.io.opcode.poke(opcode)
         dut.clock.step()
@@ -36,29 +37,23 @@ class RISCVAdderSubtractor32Test extends AnyFlatSpec {
         val overflowFlag = dut.io.overflowFlag.peek().litValue == 1
         val zeroFlag = dut.io.zeroFlag.peek().litValue == 1
         val negativeFlag = dut.io.negativeFlag.peek().litValue == 1
-        if(printDebugInfo) println(s"[ALU64 - Result] -- Sum: $result, Carry: $carryOut, zeroFlag: $zeroFlag, negativeFlag $negativeFlag")
+        if(printDebugInfo) println(s"[ALU32 - Result] -- Sum: $result, Carry: $carryOut, zeroFlag: $zeroFlag, negativeFlag $negativeFlag")
         
-        assert(result == expected, s"[ALU64] -- Expected result 0x${expected.toString(16)} but got 0x${result.toString(16)} for opcode $opcode")
+        assert(result == expected, s"[ALU32] -- Expected result 0x${expected.toString(16)} but got 0x${result.toString(16)} for opcode $opcode")
         if( isSigned ) {
-          assert(overflowFlag == expectedFlag, s"[ALU64] -- Expected Overflow Flag $expectedFlag but got overflowFlag $overflowFlag for opcode= $opcode and isSigned= $isSigned")
+          assert(overflowFlag == expectedFlag, s"[ALU32] -- Expected Overflow Flag $expectedFlag but got overflowFlag $overflowFlag for opcode= $opcode and isSigned= $isSigned")
         } else {
-          assert(carryOut == expectedFlag, s"[ALU64] -- ExpectedFlag $expectedFlag but got carryOut $carryOut for opcode $opcode")
+          assert(carryOut == expectedFlag, s"[ALU32] -- ExpectedFlag $expectedFlag but got carryOut $carryOut for opcode $opcode")
         }
 
-        assert(zeroFlag == expectedZeroFlag, s"[ALU64] -- ExpectedZeroFlag $expectedZeroFlag but got zeroFlag $zeroFlag for opcode $opcode")
+        assert(zeroFlag == expectedZeroFlag, s"[ALU32] -- ExpectedZeroFlag $expectedZeroFlag but got zeroFlag $zeroFlag for opcode $opcode")
       }
 
     def testArithmetic(): Unit = {
       // Test cases for all opcodes
       val opcodes = Seq(
-        (Opcode.ADD_U8, false, 8), (Opcode.ADD_U16, false, 16),
-        (Opcode.ADD_U32, false, 32), (Opcode.ADD_U64, false, 64),
-        (Opcode.SUB_U8, false, 8), (Opcode.SUB_U16, false, 16),
-        (Opcode.SUB_U32, false, 32), (Opcode.SUB_U64, false, 64),
-        (Opcode.ADD_S8, true, 8), (Opcode.ADD_S16, true, 16),
-        (Opcode.ADD_S32, true, 32), (Opcode.ADD_S64, true, 64),
-        (Opcode.SUB_S8, true, 8), (Opcode.SUB_S16, true, 16),
-        (Opcode.SUB_S32, true, 32), (Opcode.SUB_S64, true, 64)
+        (Opcode.ADD_U32, false, 32), (Opcode.SUB_U32, false, 32), 
+        (Opcode.ADD_S32, true, 32),  (Opcode.SUB_S32, true, 32)
       )
 
       for ((opcode, signed, width) <- opcodes) {
@@ -72,9 +67,9 @@ class RISCVAdderSubtractor32Test extends AnyFlatSpec {
 
         if(printDebugInfo)
         {
-          println(s"[ALU64] -- Opcode: $opcode, Signed: $signed, Width: $width")
-          println(s"[ALU64] -- a: 4, b: 3")
-          println(s"[ALU64] -- ExpectedResult: $expected, ExpectedCarry: 0")
+          println(s"[ALU32] -- Opcode: $opcode, Signed: $signed, Width: $width")
+          println(s"[ALU32] -- a: 4, b: 3")
+          println(s"[ALU32] -- ExpectedResult: $expected, ExpectedCarry: 0")
         }
         if (isAdd) testOperation(4, 3, opcode, expected, false, false, false)
         if (isSub) testOperation(4, 3, opcode, expected, false, false, false) 
@@ -131,10 +126,10 @@ class RISCVAdderSubtractor32Test extends AnyFlatSpec {
 
             if(printDebugInfo)
             {
-              println(s"[ALU64 - Sub - Borrow] -- Opcode: $opcode, Signed: $signed, Width: $width")
-              println(s"[ALU64 - Sub - Borrow] -- MaxValUnsigned: $maxValUnsigned, MinVal: $minValUnsigned")
-              println(s"[ALU64 - Sub - Borrow] -- a: $a, b: $b")
-              println(s"[ALU64 - Sub - Borrow] -- ExpectedResult: ${borrowExpectedResult.toString(16)}, ExpectedCarry: $borrowCarry")
+              println(s"[ALU32 - Sub - Borrow] -- Opcode: $opcode, Signed: $signed, Width: $width")
+              println(s"[ALU32 - Sub - Borrow] -- MaxValUnsigned: $maxValUnsigned, MinVal: $minValUnsigned")
+              println(s"[ALU32 - Sub - Borrow] -- a: $a, b: $b")
+              println(s"[ALU32 - Sub - Borrow] -- ExpectedResult: ${borrowExpectedResult.toString(16)}, ExpectedCarry: $borrowCarry")
             }
 
             testOperation(a, b, opcode, borrowExpectedResult, borrowCarry, zeroFlag, negativeFlag)
@@ -158,10 +153,10 @@ class RISCVAdderSubtractor32Test extends AnyFlatSpec {
 
             if(printDebugInfo)
             {
-              println(s"[ALU64 - Add - Overflow] -- Opcode: $opcode, Signed: $signed, Width: $width")
-              println(s"[ALU64 - Add - Overflow] -- MaxValPosSigned: $maxValPosSigned, MinValNegSigned: $minValNegSigned")
-              println(s"[ALU64 - Add - Overflow] -- a: $a, b: $b")
-              println(s"[ALU64 - Add - Overflow] -- ExpectedResult: ${overflowExpectedResult.toString(16)}, overflowExpectedFlag: $overflowExpectedFlag")
+              println(s"[ALU32 - Add - Overflow] -- Opcode: $opcode, Signed: $signed, Width: $width")
+              println(s"[ALU32 - Add - Overflow] -- MaxValPosSigned: $maxValPosSigned, MinValNegSigned: $minValNegSigned")
+              println(s"[ALU32 - Add - Overflow] -- a: $a, b: $b")
+              println(s"[ALU32 - Add - Overflow] -- ExpectedResult: ${overflowExpectedResult.toString(16)}, overflowExpectedFlag: $overflowExpectedFlag")
             }
            
            testOperation(a, b, opcode, overflowExpectedResult, overflowExpectedFlag, zeroFlag, negativeFlag)
@@ -179,10 +174,10 @@ class RISCVAdderSubtractor32Test extends AnyFlatSpec {
             val negativeFlag = false
 
             if (printDebugInfo) {
-              println(s"[ALU64 - Sub - Underflow] -- Opcode: $opcode, Signed: $signed, Width: $width")
-              println(s"[ALU64 - Sub - Underflow] -- MaxValPosSigned: $maxValPosSigned, MinValNegSigned: $minValNegSigned")
-              println(s"[ALU64 - Sub - Underflow] -- a: $a, b: $b")
-              println(s"[ALU64 - Sub - Underflow] -- ExpectedResult: ${underflowExpectedResult.toString(16)}, underflowExpectedFlag: $underflowExpectedFlag")
+              println(s"[ALU32 - Sub - Underflow] -- Opcode: $opcode, Signed: $signed, Width: $width")
+              println(s"[ALU32 - Sub - Underflow] -- MaxValPosSigned: $maxValPosSigned, MinValNegSigned: $minValNegSigned")
+              println(s"[ALU32 - Sub - Underflow] -- a: $a, b: $b")
+              println(s"[ALU32 - Sub - Underflow] -- ExpectedResult: ${underflowExpectedResult.toString(16)}, underflowExpectedFlag: $underflowExpectedFlag")
             }
 
             testOperation(a, b, opcode, underflowExpectedResult, underflowExpectedFlag, zeroFlag, negativeFlag)
@@ -228,7 +223,30 @@ class RISCVAdderSubtractor32Test extends AnyFlatSpec {
         }
       }
 
-      }
+    }
+    def testAdd(): Unit = {
+      val testCases = Seq(
+        (123, 678, Opcode.ADD_U32, 801, false, false, false),  // Unsigned Addition
+        (250, 150, Opcode.ADD_U32, 400, false, false, false), // Unsigned Addition
+
+        (1234, 789, Opcode.SUB_U32, 445, false, false, false),  //UnSigned Subtraction
+        (2500, 150, Opcode.SUB_U32, 2350, false, false, false),  //UnSigned Subtraction
+
+        (123, 678, Opcode.ADD_S32, 801, false, false, false),  //Signed Addition 
+        (250, 150, Opcode.ADD_S32, 400, false, false, false),  //Signed Addition
+         
+        (167, 123, Opcode.SUB_S32, 44, false, false, false),  //Signed Subtraction
+        (250, 150, Opcode.SUB_S32, 100, false, false, false),  //Signed Subtraction
+
+
+        //(40000, 15000, Opcode.ADD_U32, 25000, false, false, false),  // Subtraction
+        //(500000, 123456, Opcode.ADD_U32, 623456, false, false, false), // Addition
+        //(1000000, 500000, Opcode.ADD_U32, 500000, false, false, false) // Subtraction
+      )
+    for ((a, b, opcode, expected, expectedFlag, expectedZeroFlag, expectedNegativeFlag) <- testCases) {
+        testOperation(BigInt(a), BigInt(b), opcode, BigInt(expected), expectedFlag, expectedZeroFlag, expectedNegativeFlag)
+    }
+  }
     }
   }
 }

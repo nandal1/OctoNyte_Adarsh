@@ -11,6 +11,7 @@ import scabook.ALUs.ALU32.Opcode
 class ALU32Test extends AnyFlatSpec {
 
   "ALU32" should "correctly compute arithmetic, logical, and shift operations for all opcodes and test flags" in {
+
     simulate(new ALU32) { dut =>
       val printDebugInfo = false
 
@@ -19,10 +20,12 @@ class ALU32Test extends AnyFlatSpec {
 
       def testOperation(a: BigInt, b: BigInt, opcode: UInt, expected: BigInt, 
                         expectedFlag: Boolean, expectedZeroFlag: Boolean, expectedNegativeFlag: Boolean): Unit = {
+
         dut.io.a.poke(a.U)
         dut.io.b.poke(b.U)
         dut.io.opcode.poke(opcode)
         dut.clock.step()
+
 
         val result = dut.io.result.peek().litValue
         val carryOut = dut.io.carryOutFlag.peek().litValue == 1
@@ -35,10 +38,12 @@ class ALU32Test extends AnyFlatSpec {
         assert(result == expected, s"[ALU32] -- Expected result 0x${expected.toString(16)} but got 0x${result.toString(16)} for opcode $opcode")
         assert(carryOut == expectedFlag, s"[ALU32] -- Expected carry flag $expectedFlag but got $carryOut for opcode $opcode")
         assert(zeroFlag == expectedZeroFlag, s"[ALU32] -- Expected zero flag $expectedZeroFlag but got $zeroFlag for opcode $opcode")
+
       }
 
       def testArithmetic(): Unit = {
         val opcodes = Seq(
+
           Opcode.ADD, Opcode.SUB, Opcode.ADDI, Opcode.SLTI
         )
 
@@ -66,7 +71,7 @@ class ALU32Test extends AnyFlatSpec {
             case x if x == Opcode.SRA.litValue.toInt => (a.toInt >> (b & 0x1F)) & 0xFFFFFFFFL
           }
           testOperation(a, b, opcode, expected, false, expected == 0, expected < 0)
-          //Merging changes
+
         }
       }
     }

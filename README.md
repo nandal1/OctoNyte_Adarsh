@@ -1,65 +1,91 @@
 # OctoNyte
 A RISC-V Multithreaded Core Targeting the Skywater 0.13um ASIC library
 
-## User Story: CPU Designer - Parameterized Execution Units in Chisel  
-
-### Description  
-As a CPU Designer working on a 32-bit RISC-V processor, I want to develop parameterized execution units (ALU, Load, Store, and Multiplier) in Chisel so that the hardware design can support a range of configurations, remain compliant with RISC-V specifications, and be easily reused in future projects.
+**Story**  
+As a **RISC-V Simulation Engineer**, I want to **co-simulate RTL implementations** alongside **Spike** (the official RISC-V ISA simulator) so that I can confirm functional correctness, detect potential mismatches between the hardware design and the reference model, and optimize performance and design parameters before final tape-out.
 
 ---
 
-## Acceptance Criteria  
-1. **RISC-V 32-bit Compliance**  
-   - [ ] Must adhere to the base RISC-V RV32I instruction set requirements (e.g., 32-bit operations for arithmetic, load, and store).  
-   - [ ] Parameterizable design should allow easy expansion or integration with optional RISC-V extensions if needed (e.g., multiplier).  
+### **Acceptance Criteria**
 
-2. **Parameter Configurability**  
-   - [ ] Each execution unit (ALU, Load, Store, Multiplier) supports configurable options (e.g., pipeline depth, optional extra functionalities) without requiring extensive code modifications.  
-   - [ ] Changes to parameters automatically propagate through the Chisel modules and generate the corresponding Verilog.  
+1. **Spike & RTL Co-Simulation Setup**  
+   - **Condition:** There must be a framework that allows cycle-by-cycle or transaction-level comparison between the RTL signals and Spike’s reference state (registers, memory).  
+   - **Test:** Running a set of instructions or a full program in the co-simulation environment should produce matching results between RTL and Spike at all relevant checkpoints.  
+   - **Satisfaction:** No mismatches occur for validated instructions and memory transactions under normal operating conditions.
 
-3. **Synthesizable Output**  
-   - [ ] The generated Verilog for each execution unit must be synthesizable and verified to meet timing for 32-bit RISC-V designs.  
-   - [ ] Clear and consistent naming conventions must be used for integration into larger SoC projects.  
+2. **ISA Compliance & Extensions**  
+   - **Condition:** Co-simulation must handle various RISC-V ISA extensions (M, A, F, D, etc.) consistently.  
+   - **Test:** The system runs the official RISC-V compliance suite in co-simulation mode, checking that each instruction in the extended sets behaves identically in both the RTL and Spike.  
+   - **Satisfaction:** All compliance tests pass (or mismatches are flagged and diagnosed).
 
-4. **Reusability & Modularity**  
-   - [ ] Execution units are encapsulated in distinct Chisel modules with well-defined interfaces.  
-   - [ ] Each module (ALU, Load, Store, Multiplier) can be dropped into future RISC-V processor designs or adapted for similar architectures with minimal changes.  
+3. **Scalability & Performance**  
+   - **Condition:** The co-simulation environment should handle larger test programs (e.g., Linux boot, SPEC benchmarks) without prohibitive runtime.  
+   - **Test:** Testing a moderately sized benchmark (e.g., CoreMark or a basic Linux environment) completes in under a target timeframe (e.g., 2 hours).  
+   - **Satisfaction:** Simulation performance is acceptable for iterative development, and major performance bottlenecks are documented or mitigated.
 
-5. **Robust Testing & Validation**  
-   - [ ] Test benches must cover typical and edge-case RISC-V instructions for the 32-bit architecture (e.g., boundary conditions, overflow scenarios).  
-   - [ ] Each execution unit is verified independently (unit tests) and then integrated into a larger test environment for system-level validation.  
+4. **Analysis & Reporting**  
+   - **Condition:** The environment must generate detailed logs and summaries for debug and performance analysis.  
+   - **Test:** When mismatches occur (e.g., register states differ), the system logs the offending instruction and context (PC, register values, time).  
+   - **Satisfaction:** Engineers can quickly locate and diagnose the source of mismatches or performance anomalies; logs are exportable (JSON, CSV) for deeper analysis.
+
+5. **Validation & Accuracy**  
+   - **Condition:** Co-simulation results must be validated against known hardware data or performance metrics.  
+   - **Test:** Compare the final architectural state (register contents, memory values) and cycle counts (if feasible) against real hardware or established reference data.  
+   - **Satisfaction:** Results match or deviate within an acceptable threshold (e.g., <1% for performance counters).
+
+6. **User Feedback & Parameter Changes**  
+   - **Condition:** Engineers should easily enable or disable RISC-V extensions, alter memory configurations, or modify design features in the RTL or Spike.  
+   - **Test:** Changing a parameter (e.g., memory size, adding the “M” extension) should not break the co-simulation setup; both models reflect the new parameters seamlessly.  
+   - **Satisfaction:** Configuration changes propagate smoothly with minimal manual intervention, and re-simulations run without major disruptions.
 
 ---
 
-## Definition of Done  
-- [ ] **RISC-V Instruction Set Coverage:** The parameterized ALU, Load, Store, and Multiplier units correctly handle all relevant 32-bit RISC-V RV32I instructions they are responsible for.  
-- [ ] **Chisel & Verilog Generation:** Code compiles in Chisel, and generated Verilog is synthesizable with no errors or critical warnings.  
-- [ ] **Parameter Testing:** All configurable parameters (e.g., pipeline stages, optional multiplier presence) are tested, and the design functions correctly in each configuration.  
-- [ ] **Documentation & Examples:** Implementation details, parameter usage, and integration steps are documented. Examples (e.g., test fixture or reference project) show how to incorporate the parameterized modules into a broader CPU design.  
-- [ ] **Performance & Timing:** The design meets target frequency or timing constraints for a 32-bit RISC-V CPU without critical performance bottlenecks.  
+### **Definition of Done**
+
+1. **Functional Requirements**  
+   - Accurate RISC-V co-simulation at both the instruction and transactional levels.  
+   - Ability to run official compliance tests and custom test suites for extended instructions.  
+   - Automatic detection of state mismatches between the RTL and Spike.
+
+2. **Non-Functional Requirements**  
+   - Co-simulation remains performant enough for iterative regression testing (e.g., overnight runs for moderate test suites).  
+   - Secure handling of design files, ensuring no data corruption or unauthorized access to proprietary RTL code.
+
+3. **Testing & Validation**  
+   - The RISC-V compliance suite passes for each targeted extension in co-simulation mode.  
+   - Reference benchmarks confirm the correctness and performance alignment of the RTL design with Spike.  
+   - Mismatch logs are automatically generated with sufficient detail for swift debug.
+
+4. **Documentation**  
+   - Comprehensive user guides explain how to configure, run, and troubleshoot co-simulation scenarios.  
+   - Clear instructions on analyzing logs, stepping through mismatches, and extending the environment for custom instructions.
 
 ---
 
-## Implementation Tasks  
+## **Top-Level Tasks (GitHub Sub-Issues) with Estimated Person Hours**
 
-### Task A: ALU (Arithmetic Logic Unit)  
-- [ ] **Subtask A1:** Implement basic arithmetic operations (ADD, SUB) and logical operations (AND, OR, XOR) according to RV32I.  
-- [ ] **Subtask A2:** Parameterize ALU features (e.g., optional pipeline stage, bitmasking, additional operations).  
-- [ ] **Subtask A3:** Integrate testing for all ALU operations, verifying edge cases like zero, sign extension, and overflow.  
+Below is a checklist of the primary tasks required to implement this co-simulation environment. Each task can be converted into a GitHub sub-issue; subtasks may be detailed therein as needed.
 
-### Task B: Load Unit  
-- [ ] **Subtask B1:** Implement support for RISC-V load instructions (LB, LH, LW, LBU, LHU).  
-- [ ] **Subtask B2:** Parameterize load width and sign-extension features to accommodate future expansions (e.g., half-word loads).  
-- [ ] **Subtask B3:** Create a functional test bench to confirm correct data alignment, sign extension, and memory interface handling.  
+- [ ] **Task 1: Spike & RTL Integration Framework (12 ph)**  
+  Establish the basic infrastructure for co-simulation. This includes hooking the RTL simulator (e.g., Verilator, VCS) to Spike’s reference model, synchronizing execution steps, and configuring data exchange.
 
-### Task C: Store Unit  
-- [ ] **Subtask C1:** Implement store instructions (SB, SH, SW) following RISC-V alignment and data-size rules.  
-- [ ] **Subtask C2:** Parameterize store width to match load-unit configurations and ensure consistent alignment checks.  
-- [ ] **Subtask C3:** Test store operations with edge-case addresses and verify memory interface timing.  
+- [ ] **Task 2: ISA Compliance & Test Suite Integration (10 ph)**  
+  Incorporate official RISC-V compliance tests into co-simulation runs. Validate each instruction category (RV32I, RV64I, M, A, F, D, etc.) against the corresponding RTL logic.
 
-### Task D: Multiplier Unit  
-- [ ] **Subtask D1:** Implement a parameterized multiplication unit (e.g., iterative or pipelined multiplier) that supports MUL instructions (RV32M extension).  
-- [ ] **Subtask D2:** Provide configuration options for hardware complexity vs. performance trade-offs (e.g., multi-cycle vs. single-cycle).  
-- [ ] **Subtask D3:** Validate multiplier correctness over a broad range of operands, including corner cases (e.g., multiplying by zero, maximum positive/negative values).  
+- [ ] **Task 3: Parameterized Configuration (8 ph)**  
+  Implement a mechanism for enabling or disabling RISC-V extensions, adjusting memory configurations, or specifying custom instructions across both Spike and the RTL environment.
 
+- [ ] **Task 4: Performance & Scalability Testing (12 ph)**  
+  Test co-simulation with larger workloads (e.g., Linux boot, SPEC CPU or CoreMark). Measure runtime, identify bottlenecks, and optimize the environment for feasible iteration cycles.
 
+- [ ] **Task 5: Mismatch Detection & Logging (10 ph)**  
+  Develop logging and comparison modules to detect register or memory state mismatches. Generate actionable reports specifying the exact instruction and cycle of divergence.
+
+- [ ] **Task 6: Validation Against Hardware/Reference Data (10 ph)**  
+  Compare co-simulation results with known hardware traces (where available) or established performance metrics. Verify correctness and fine-tune the environment for minimal deviation.
+
+- [ ] **Task 7: Reporting & Analysis Tools (8 ph)**  
+  Create or integrate tools that parse co-simulation logs to produce summary dashboards, highlighting coverage gaps, mismatch frequency, or performance hotspots.
+
+- [ ] **Task 8: Documentation & Best Practices (6 ph)**  
+  Produce a comprehensive manual detailing setup steps, configuration variables, debug workflows, and advanced usage scenarios. Include troubleshooting tips and known limitations.
