@@ -1,12 +1,12 @@
 // Licensed under the BSD 3-Clause License.
 // See https://opensource.org/licenses/BSD-3-Clause for details.
 
-package scabook.ALUs
+package OctoNyte.ExecutionUnits
 
 import chisel3._
 import chisel3.simulator.EphemeralSimulator._
 import org.scalatest.flatspec.AnyFlatSpec
-import scabook.ALUs.ALU32.Opcode
+import OctoNyte.ExecutionUnits.ALU32.Opcode
 
 class ALU32Test extends AnyFlatSpec {
 
