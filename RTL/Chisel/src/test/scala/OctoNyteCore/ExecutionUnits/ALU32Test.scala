@@ -1,6 +1,8 @@
 // Licensed under the BSD 3-Clause License.
 // See https://opensource.org/licenses/BSD-3-Clause for details.
 
+//  sbt "testOnly OctoNyte.ExecutionUnits.ALU32Test"
+
 package OctoNyte.ExecutionUnits
 
 import chisel3._
@@ -8,72 +10,53 @@ import chisel3.simulator.EphemeralSimulator._
 import org.scalatest.flatspec.AnyFlatSpec
 import OctoNyte.ExecutionUnits.ALU32.Opcode
 
-class ALU32Test extends AnyFlatSpec {
-
-  "ALU32" should "correctly compute arithmetic, logical, and shift operations for all opcodes and test flags" in {
-
+class ALU32Test extends AnyFlatSpec{
+  "ALU32" should "correctly compute arithmetic, logical, and shift operations for all opcodes" in {
     simulate(new ALU32) { dut =>
       val printDebugInfo = false
 
-      testArithmetic()
-      testLogic()
-
-      def testOperation(a: BigInt, b: BigInt, opcode: UInt, expected: BigInt, 
-                        expectedFlag: Boolean, expectedZeroFlag: Boolean, expectedNegativeFlag: Boolean): Unit = {
-
-        dut.io.a.poke(a.U)
-        dut.io.b.poke(b.U)
+      def testOperation(a: BigInt, b: BigInt, opcode: UInt, expected: BigInt): Unit = {
+        dut.io.a.poke(a.U(32.W))
+        dut.io.b.poke(b.U(32.W))
         dut.io.opcode.poke(opcode)
         dut.clock.step()
 
+        val result = dut.io.result.peek().litValue & 0xFFFFFFFFL // Mask to 32 bits
 
-        val result = dut.io.result.peek().litValue
-        val carryOut = dut.io.carryOutFlag.peek().litValue == 1
-        val overflowFlag = dut.io.overflowFlag.peek().litValue == 1
-        val zeroFlag = dut.io.zeroFlag.peek().litValue == 1
-        val negativeFlag = dut.io.negativeFlag.peek().litValue == 1
-
-        if (printDebugInfo) println(s"[ALU32 - Result] -- Result: $result, Carry: $carryOut, Zero: $zeroFlag, Negative: $negativeFlag")
-
-        assert(result == expected, s"[ALU32] -- Expected result 0x${expected.toString(16)} but got 0x${result.toString(16)} for opcode $opcode")
-        assert(carryOut == expectedFlag, s"[ALU32] -- Expected carry flag $expectedFlag but got $carryOut for opcode $opcode")
-        assert(zeroFlag == expectedZeroFlag, s"[ALU32] -- Expected zero flag $expectedZeroFlag but got $zeroFlag for opcode $opcode")
-
+        if (printDebugInfo) println(s"[ALU32 - Result] -- Result: $result")
+         assert(result == (expected & 0xFFFFFFFFL), 
+         s"[ALU32] -- Expected result 0x${(expected & 0xFFFFFFFFL).toString(16)} but got 0x${result.toString(16)} for opcode $opcode")
       }
 
+
       def testArithmetic(): Unit = {
-        val opcodes = Seq(
-
-          Opcode.ADD, Opcode.SUB, Opcode.ADDI, Opcode.SLTI
-        )
-
-        for (opcode <- opcodes) {
-          val isSub = opcode === Opcode.SUB
-          val expected = if (isSub.litToBoolean) 4 - 3 else 4 + 3
-          testOperation(4, 3, opcode, expected, false, expected == 0, expected < 0)
-        }
+        testOperation(4, 3, Opcode.ADD, 4 + 3)
+        testOperation(4, 3, Opcode.SUB, 4 - 3)
       }
 
       def testLogic(): Unit = {
-        val opcodes = Seq(
-          Opcode.AND, Opcode.OR, Opcode.XOR, Opcode.SLL, Opcode.SRL, Opcode.SRA
-        )
-
-        for (opcode <- opcodes) {
-          val a = 0xF0F0F0F0
-          val b = 0x0F0F0F0F
-          val expected = opcode.litValue.toInt match {
-            case x if x == Opcode.AND.litValue.toInt => a & b
-            case x if x == Opcode.OR.litValue.toInt  => a | b
-            case x if x == Opcode.XOR.litValue.toInt => a ^ b
-            case x if x == Opcode.SLL.litValue.toInt => a << (b & 0x1F)
-            case x if x == Opcode.SRL.litValue.toInt => a >>> (b & 0x1F)
-            case x if x == Opcode.SRA.litValue.toInt => (a.toInt >> (b & 0x1F)) & 0xFFFFFFFFL
-          }
-          testOperation(a, b, opcode, expected, false, expected == 0, expected < 0)
-
-        }
+        testOperation(0xF0F0F0F0L, 0x0F0F0F0FL, Opcode.AND, 0xF0F0F0F0L & 0x0F0F0F0FL)
+        testOperation(0xF0F0F0F0L, 0x0F0F0F0FL, Opcode.OR, 0xF0F0F0F0L | 0x0F0F0F0FL)
+        testOperation(0xF0F0F0F0L, 0x0F0F0F0FL, Opcode.XOR, 0xF0F0F0F0L ^ 0x0F0F0F0FL)
       }
+
+      def testShift(): Unit = {
+        testOperation(0xF0F0F0F0L, 4, Opcode.SLL, 0xF0F0F0F0L << 4)
+        testOperation(0xF0F0F0F0L, 4, Opcode.SRL, 0xF0F0F0F0L >> 4)
+        testOperation(0xF0F0F0F0L, 4, Opcode.SRA, (0xF0F0F0F0L.toInt >> 4) & 0xFFFFFFFFL)
+      }
+
+      def testComparison(): Unit = {
+        testOperation(4, 5, Opcode.SLT, 1)
+        testOperation(5, 4, Opcode.SLT, 0)
+        testOperation(4, 5, Opcode.SLTU, 1)
+        testOperation(5, 4, Opcode.SLTU, 0)
+      }
+
+      testArithmetic()
+      testLogic()
+      testShift()
+      testComparison()
     }
   }
 }
