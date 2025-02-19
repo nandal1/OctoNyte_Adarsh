@@ -1,0 +1,12 @@
+name: octonyte
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - anaconda
+  - selenium
+  - pip:
+      - pydantic
+      - openai
+      - unstructured      
+prefix: /opt/conda/envs/octonyte
