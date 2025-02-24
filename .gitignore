@@ -32,3 +32,4 @@ settings.json
 
 .DS_Store
 .vscode/tasks.json
+output/.~lock.rtl_timed_results.xlsx#
