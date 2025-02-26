@@ -162,20 +162,39 @@ int main() {
     get_registers(&state);
     regs.states[regs.count++] = state;
 
-    /* First inline assembly block: modify some registers */
+    
     __asm__ volatile (
 	    "xor  t1, t1, t1\n"    // t1 = 0
         "xor  s2, s2, s2\n"    // s2 = 0
         "xor  s3, s3, s3\n"    // s3 = 0
-        "addi s2, s2, 0x01\n"  // t2 = t0 + t1
-        "addi  s3, s2, 0x01\n"  // New ADDI: t3 = t3 + 0x1F
-        "add   s4, s2, s3\n"
     );
+    printf("Set registers to 0:\n");
+    get_registers(&state);
+    regs.states[regs.count++] = state;
+
+    __asm__ volatile (
+        "addi s2, s2, 0x01\n"  // s2 = 0 + 1 = 1
+    );
+    printf("addi s2, s2, 0x01  // s2 = 0 + 1 = 1\n");
+    get_registers(&state);
+    regs.states[regs.count++] = state;
+
+    __asm__ volatile (
+        "addi  s3, s2, 0x01\n"  // s3 = 1 + 1 = 2
+    );
+    printf("addi  s3, s2, 0x01  // s3 = 1 + 1 = 2\n");
+    get_registers(&state);
+    regs.states[regs.count++] = state;
+
+    __asm__ volatile (
+        "add   s4, s2, s3\n"  // s4 = 1 + 2 = 3
+    );
+    printf("add   s4, s2, s3\n  // s4 = 1 + 2 = 3\n");
     get_registers(&state);
     regs.states[regs.count++] = state;
 
     // Save and load the register dump
-    save_register_dump(&regs, "register_dump.txt");
+    save_register_dump(&regs, "../test_compare/test_add_dump.txt");
 
     return 0;
 } 

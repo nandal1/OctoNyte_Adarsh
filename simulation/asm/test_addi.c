@@ -179,7 +179,7 @@ int main() {
     regs.states[regs.count++] = state;
 
     // Save and load the register dump
-    save_register_dump(&regs, "register_dump.txt");
+    save_register_dump(&regs, "../test_compare/test_addi_dump.txt");
 
     return 0;
 }
