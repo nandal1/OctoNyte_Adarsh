@@ -38,7 +38,11 @@ object GenerateHardware extends App {
     //  (() => new scabook.addersubtractors.BehavioralAdderSubtractorHW4, "BehavioralAdderSubtractorHW4"), 
     //  (() => new scabook.addersubtractors.BehavioralAdderSubtractor64, "BehavioralAdderSubtractor64"),
     //  (() => new scabook.addersubtractors.MultifunctionAdderSubtractor64, "MultifunctionAdderSubtractor64"), 
-    (() => new OctoNyte.ExecutionUnits.RISCVAdderSubtractor32, "RISCVAdderSubtractor32"),
+    //  (() => new OctoNyte.ExecutionUnits.RISCVAdderSubtractor32, "RISCVAdderSubtractor32"),
+    //  (() => new TetraNyte.RegFileMT2R1WVec, "RegFileMT2R1WVec"),
+    (() => new TetraNyte.TetraNyteCore, "TetraNyteCore"),
+    (() => new OctoNyte.ExecutionUnits.ALU32, "ALU32"),
+    (() => new OctoNyte.LoadUnits.LoadUnit, "LoadUnit"),
     //(() => new scabook.ALUs.ALU64, "ALU64"), 
   )
 
@@ -78,8 +82,8 @@ object GenerateHardware extends App {
       generateFIRRTLandSystemVerilog(module, moduleName)
       convertSystemVerilogToVerilog(module, moduleName)
       synthesizeNetlist(module, moduleName, optimizeForASIC)
-      generateSVG(module, moduleName)
-      convertSVGtoPNG(module, moduleName, convertSVGcommand)
+      //generateSVG(module, moduleName)
+      //convertSVGtoPNG(module, moduleName, convertSVGcommand)
       if(shouldDeleteIntermediateFiles) deleteIntermediateFiles(module, moduleName)
       //printHelp()
     
