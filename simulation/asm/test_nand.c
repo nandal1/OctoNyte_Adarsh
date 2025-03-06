@@ -80,11 +80,6 @@ void load_register_dump(RegisterDump *dump, const char *filename) {
     fclose(file);
 }
 
-
-
-
-
-
 // Function to fetch register values using RISC-V inline assembly
 void get_registers(RegisterState *regs) {
     /* Max of 30 input operands in a single asm statement */
@@ -144,42 +139,50 @@ void get_registers(RegisterState *regs) {
    printf("  s6 = 0x%lx, s7 = 0x%lx, s8 = 0x%lx\n", regs->s6, regs->s7, regs->s8);
    printf("  s9 = 0x%lx, s10 = 0x%lx, s11 = 0x%lx\n", regs->s9, regs->s10, regs->s11);
    printf("  t3 = 0x%lx, t4 = 0x%lx, t5 = 0x%lx, t6 = 0x%lx\n", regs->t3, regs->t4, regs->t5, regs->t6);
-   printf("---------------------------------------\n");
 }
 
+// Function to perform NAND, NOR, and XOR operations
+void perform_logic_operations(unsigned long a, unsigned long b) {
+    unsigned long result_nand, result_nor, result_xor;
 
+    // NAND Operation
+    __asm__ volatile (
+        "and %0, %1, %2\n"     // AND operation between A and B
+        "not %0, %0\n"         // NOT operation to get the NAND result
+        : "=r"(result_nand)    // Output result
+        : "r"(a), "r"(b)       // Inputs A and B
+    );
+
+    // NOR Operation
+    __asm__ volatile (
+        "or %0, %1, %2\n"      // OR operation between A and B
+        "not %0, %0\n"         // NOT operation to get the NOR result
+        : "=r"(result_nor)     // Output result
+        : "r"(a), "r"(b)       // Inputs A and B
+    );
+
+    // XOR Operation
+    __asm__ volatile (
+        "xor %0, %1, %2\n"     // XOR operation between A and B
+        : "=r"(result_xor)     // Output result
+        : "r"(a), "r"(b)       // Inputs A and B
+    );
+
+    printf("NAND result: 0x%lx\n", result_nand);
+    printf("NOR result: 0x%lx\n", result_nor);
+    printf("XOR result: 0x%lx\n", result_xor);
+}
 
 int main() {
-    RegisterDump regs;
-    regs.count = 0;
-
-
-    // Initializing RegisterState 
-    int i = 0;
-     RegisterState state = { .ra = i, .sp = i + 1, .gp = i + 2, .tp = i + 3,
-                                .t0 = i + 4, .t1 = i + 5, .t2 = i + 6, .s0 = i + 7, .s1 = i + 8,
-                                .a0 = i + 9, .a1 = i + 10, .a2 = i + 11, .a3 = i + 12, .a4 = i + 13,
-                                .a5 = i + 14, .a6 = i + 15, .a7 = i + 16, .s2 = i + 17, .s3 = i + 18,
-                                .s4 = i + 19, .s5 = i + 20, .s6 = i + 21, .s7 = i + 22, .s8 = i + 23,
-                                .s9 = i + 24, .s10 = i + 25, .s11 = i + 26, .t3 = i + 27, .t4 = i + 28,
-                                .t5 = i + 29, .t6 = i + 30 };
-
+    unsigned long a = 0xF0F0F0F0;  // Sample value A
+    unsigned long b = 0x0F0F0F0F;  // Sample value B
     
+    // Fetch registers
+    RegisterState regs;
+    get_registers(&regs);
 
-    printf("Initial register state:\n");
-    get_registers(&state);
-    regs.states[regs.count++] = state;
-
-    /* First inline assembly block: modify some registers */
-    __asm__ volatile (
-	"xor  t1, t1, t1\n"    // t1 = 0
-        "addi t2, t1, 0xAB\n"  // t2 = t0 + t1
-    );
-    get_registers(&state);
-    regs.states[regs.count++] = state;
-
-    // Save and load the register dump
-    save_register_dump(&regs, "../test_compare/test_addi_dump.txt");
+    // Perform NAND, NOR, and XOR operations
+    perform_logic_operations(a, b);
 
     return 0;
 }
