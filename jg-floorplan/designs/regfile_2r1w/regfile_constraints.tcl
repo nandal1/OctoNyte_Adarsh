@@ -5,13 +5,18 @@
 #
 # lane_constraints.tcl
 # Force lane0 to a specific coordinate
-puts "DEBUG: lane_constraints.tcl has been sourced."
+
+set debug_file "/openlane/designs/regfile_2r1w/regfile_constraints_debug.log"
+set f [open $debug_file "a"]
+puts $f "lane_constraints.tcl sourced at [clock seconds]\n"
+close $f
+
 unfix_inst lane0
-move_inst lane0 1500 3000
+move_inst lane0 50 300
 
 # Similarly for lane1, if you have another macro:
 unfix_inst lane1
-move_inst lane1 2100 3000
+move_inst lane1 500 1000
 
 #set_fp_inst_region lane0 "500 1000 1500 3000"
 

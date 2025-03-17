@@ -6,8 +6,8 @@
 
     "FP_ASPECT_RATIO": 2,
     "FP_SIZING": "absolute",
-    "DIE_AREA": "0 0 500 1000",
-    "FP_CORE_AREA": "50 50 500 1000",
+    "DIE_AREA": "0 0 3000 6000",
+    "FP_CORE_AREA": "750 1500 2250 4500",
 
     "FP_EXTRA_TCL": "regfile_constraints.tcl",
 
