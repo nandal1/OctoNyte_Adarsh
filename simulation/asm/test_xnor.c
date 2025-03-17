@@ -1,6 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
 
 #define MAX_DUMPS 100  // Maximum number of state dumps
 
@@ -82,6 +80,7 @@ void load_register_dump(RegisterDump *dump, const char *filename) {
 
 // Function to fetch register values using RISC-V inline assembly
 void get_registers(RegisterState *regs) {
+    /* Max of 30 input operands in a single asm statement */
     /* First block: capture 16 registers */
     __asm__ volatile (
         "mv %0, ra\n"
@@ -138,18 +137,24 @@ void get_registers(RegisterState *regs) {
    printf("  s6 = 0x%lx, s7 = 0x%lx, s8 = 0x%lx\n", regs->s6, regs->s7, regs->s8);
    printf("  s9 = 0x%lx, s10 = 0x%lx, s11 = 0x%lx\n", regs->s9, regs->s10, regs->s11);
    printf("  t3 = 0x%lx, t4 = 0x%lx, t5 = 0x%lx, t6 = 0x%lx\n", regs->t3, regs->t4, regs->t5, regs->t6);
+   printf("---------------------------------------\n");
 }
 
 int main() {
     RegisterDump regs;
     regs.count = 0;
 
-    RegisterState state = {0};
-    get_registers(&state);
-    regs.states[regs.count++] = state;
+    // Perform XNOR operation using xor and not
+    __asm__ volatile (
+        "xor t1, t0, t2\n"    // XOR operation: t1 = t0 ^ t2
+        "not t1, t1\n"         // NOT operation: t1 = ~t1 (XNOR)
+    );
 
-    // Save the register state
-    save_register_dump(&regs, "../test_compare/test_sub.txt");
+    // Get and print the state of the registers
+    get_registers(&regs.states[regs.count]);
+
+    // Increment the dump count
+    regs.count++;
 
     return 0;
 }

@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdint.h>
+#include <unistd.h>  // For getcwd function
 
 #define MAX_DUMPS 100  // Maximum number of state dumps
 
@@ -19,7 +19,6 @@ typedef struct {
     int count;
 } RegisterDump;
 
-// Function to save register dumps to a text file
 void save_register_dump(const RegisterDump *dump, const char *filename) {
     FILE *file = fopen(filename, "w");
     if (!file) {
@@ -27,20 +26,30 @@ void save_register_dump(const RegisterDump *dump, const char *filename) {
         return;
     }
 
-    for (int i = 0; i < dump->count; i++) {
-        RegisterState state = dump->states[i];
-        fprintf(file, "Dump %d:\n", i + 1);
-        fprintf(file, "ra=%lu sp=%lu gp=%lu tp=%lu\n", state.ra, state.sp, state.gp, state.tp);
-        fprintf(file, "t0=%lu t1=%lu t2=%lu s0=%lu s1=%lu\n", state.t0, state.t1, state.t2, state.s0, state.s1);
-        fprintf(file, "a0=%lu a1=%lu a2=%lu a3=%lu a4=%lu a5=%lu a6=%lu a7=%lu\n",
-                state.a0, state.a1, state.a2, state.a3, state.a4, state.a5, state.a6, state.a7);
-        fprintf(file, "s2=%lu s3=%lu s4=%lu s5=%lu s6=%lu s7=%lu s8=%lu s9=%lu s10=%lu s11=%lu\n",
-                state.s2, state.s3, state.s4, state.s5, state.s6, state.s7, state.s8, state.s9, state.s10, state.s11);
-        fprintf(file, "t3=%lu t4=%lu t5=%lu t6=%lu\n\n", state.t3, state.t4, state.t5, state.t6);
+    printf("Saving to file: %s\n", filename);  // Debugging line
+
+    if (dump->count == 0) {
+        fprintf(file, "No register dumps to save.\n");
+    } else {
+        printf("Number of register dumps: %d\n", dump->count);  // Debugging line
+
+        for (int i = 0; i < dump->count; i++) {
+            RegisterState state = dump->states[i];
+            fprintf(file, "Dump %d:\n", i + 1);
+            fprintf(file, "ra=%lu sp=%lu gp=%lu tp=%lu\n", state.ra, state.sp, state.gp, state.tp);
+            fprintf(file, "t0=%lu t1=%lu t2=%lu s0=%lu s1=%lu\n", state.t0, state.t1, state.t2, state.s0, state.s1);
+            fprintf(file, "a0=%lu a1=%lu a2=%lu a3=%lu a4=%lu a5=%lu a6=%lu a7=%lu\n",
+                    state.a0, state.a1, state.a2, state.a3, state.a4, state.a5, state.a6, state.a7);
+            fprintf(file, "s2=%lu s3=%lu s4=%lu s5=%lu s6=%lu s7=%lu s8=%lu s9=%lu s10=%lu s11=%lu\n",
+                    state.s2, state.s3, state.s4, state.s5, state.s6, state.s7, state.s8, state.s9, state.s10, state.s11);
+            fprintf(file, "t3=%lu t4=%lu t5=%lu t6=%lu\n\n", state.t3, state.t4, state.t5, state.t6);
+        }
     }
 
     fclose(file);
+    printf("Register dump saved successfully.\n");  // Debugging line
 }
+
 
 // Function to load register dumps from a text file
 void load_register_dump(RegisterDump *dump, const char *filename) {
@@ -82,6 +91,7 @@ void load_register_dump(RegisterDump *dump, const char *filename) {
 
 // Function to fetch register values using RISC-V inline assembly
 void get_registers(RegisterState *regs) {
+    /* Max of 30 input operands in a single asm statement */
     /* First block: capture 16 registers */
     __asm__ volatile (
         "mv %0, ra\n"
@@ -138,18 +148,25 @@ void get_registers(RegisterState *regs) {
    printf("  s6 = 0x%lx, s7 = 0x%lx, s8 = 0x%lx\n", regs->s6, regs->s7, regs->s8);
    printf("  s9 = 0x%lx, s10 = 0x%lx, s11 = 0x%lx\n", regs->s9, regs->s10, regs->s11);
    printf("  t3 = 0x%lx, t4 = 0x%lx, t5 = 0x%lx, t6 = 0x%lx\n", regs->t3, regs->t4, regs->t5, regs->t6);
+   printf("----------------------------------\n");
 }
 
 int main() {
-    RegisterDump regs;
-    regs.count = 0;
+    RegisterDump dump = { .count = 0 };
+    char cwd[1024];
+    if (getcwd(cwd, sizeof(cwd)) == NULL) {
+        perror("getcwd failed");
+        return 1;
+    }
+    printf("Current working directory: %s\n", cwd);
 
-    RegisterState state = {0};
-    get_registers(&state);
-    regs.states[regs.count++] = state;
+    RegisterState regs;
+    get_registers(&regs);
 
-    // Save the register state
-    save_register_dump(&regs, "../test_compare/test_sub.txt");
+    dump.states[dump.count] = regs;
+    dump.count++;
+
+    save_register_dump(&dump, "register_dump.txt");
 
     return 0;
 }

@@ -82,7 +82,6 @@ void load_register_dump(RegisterDump *dump, const char *filename) {
 
 // Function to fetch register values using RISC-V inline assembly
 void get_registers(RegisterState *regs) {
-    /* First block: capture 16 registers */
     __asm__ volatile (
         "mv %0, ra\n"
         "mv %1, sp\n"
@@ -104,10 +103,9 @@ void get_registers(RegisterState *regs) {
           "=r"(regs->t0), "=r"(regs->t1), "=r"(regs->t2), "=r"(regs->s0),
           "=r"(regs->s1), "=r"(regs->a0), "=r"(regs->a1), "=r"(regs->a2),
           "=r"(regs->a3), "=r"(regs->a4), "=r"(regs->a5), "=r"(regs->a6)
-   );
+    );
 
-   /* Second block: capture remaining 15 registers */
-   __asm__ volatile (
+    __asm__ volatile (
         "mv %0, a7\n"
         "mv %1, s2\n"
         "mv %2, s3\n"
@@ -126,30 +124,56 @@ void get_registers(RegisterState *regs) {
         : "=r"(regs->a7), "=r"(regs->s2), "=r"(regs->s3), "=r"(regs->s4), "=r"(regs->s5),
           "=r"(regs->s6), "=r"(regs->s7), "=r"(regs->s8), "=r"(regs->s9), "=r"(regs->s10),
           "=r"(regs->s11), "=r"(regs->t3), "=r"(regs->t4), "=r"(regs->t5), "=r"(regs->t6)
-   );
+    );
 
-   printf("Register state:\n");
-   printf("  ra = 0x%lx, sp = 0x%lx, gp = 0x%lx, tp = 0x%lx\n", regs->ra, regs->sp, regs->gp, regs->tp);
-   printf("  t0 = 0x%lx, t1 = 0x%lx, t2 = 0x%lx\n", regs->t0, regs->t1, regs->t2);
-   printf("  s0 = 0x%lx, s1 = 0x%lx\n", regs->s0, regs->s1);
-   printf("  a0 = 0x%lx, a1 = 0x%lx, a2 = 0x%lx, a3 = 0x%lx\n", regs->a0, regs->a1, regs->a2, regs->a3);
-   printf("  a4 = 0x%lx, a5 = 0x%lx, a6 = 0x%lx, a7 = 0x%lx\n", regs->a4, regs->a5, regs->a6, regs->a7);
-   printf("  s2 = 0x%lx, s3 = 0x%lx, s4 = 0x%lx, s5 = 0x%lx\n", regs->s2, regs->s3, regs->s4, regs->s5);
-   printf("  s6 = 0x%lx, s7 = 0x%lx, s8 = 0x%lx\n", regs->s6, regs->s7, regs->s8);
-   printf("  s9 = 0x%lx, s10 = 0x%lx, s11 = 0x%lx\n", regs->s9, regs->s10, regs->s11);
-   printf("  t3 = 0x%lx, t4 = 0x%lx, t5 = 0x%lx, t6 = 0x%lx\n", regs->t3, regs->t4, regs->t5, regs->t6);
+    printf("Register state:\n");
+    printf("  ra = 0x%lx, sp = 0x%lx, gp = 0x%lx, tp = 0x%lx\n", regs->ra, regs->sp, regs->gp, regs->tp);
+    printf("  t0 = 0x%lx, t1 = 0x%lx, t2 = 0x%lx\n", regs->t0, regs->t1, regs->t2);
+    printf("  s0 = 0x%lx, s1 = 0x%lx\n", regs->s0, regs->s1);
+    printf("  a0 = 0x%lx, a1 = 0x%lx, a2 = 0x%lx, a3 = 0x%lx\n", regs->a0, regs->a1, regs->a2, regs->a3);
+    printf("  a4 = 0x%lx, a5 = 0x%lx, a6 = 0x%lx, a7 = 0x%lx\n", regs->a4, regs->a5, regs->a6, regs->a7);
+    printf("  s2 = 0x%lx, s3 = 0x%lx, s4 = 0x%lx, s5 = 0x%lx\n", regs->s2, regs->s3, regs->s4, regs->s5);
+    printf("  s6 = 0x%lx, s7 = 0x%lx, s8 = 0x%lx\n", regs->s6, regs->s7, regs->s8);
+    printf("  s9 = 0x%lx, s10 = 0x%lx, s11 = 0x%lx\n", regs->s9, regs->s10, regs->s11);
+    printf("  t3 = 0x%lx, t4 = 0x%lx, t5 = 0x%lx, t6 = 0x%lx\n", regs->t3, regs->t4, regs->t5, regs->t6);
+    printf("---------------------------------------\n");
+}
+
+// Function to simulate the SW (Store Word) instruction
+void sw_instruction(unsigned long *address, unsigned long value) {
+    __asm__ volatile (
+        "sw %0, 0(%1)"  // Store value from register %0 into memory address %1
+        : // No output
+        : "r"(value), "r"(address)  // Inputs: value to store, address to store at
+    );
 }
 
 int main() {
     RegisterDump regs;
     regs.count = 0;
 
-    RegisterState state = {0};
+    // Initializing RegisterState
+    RegisterState state = { .ra = 1, .sp = 2, .gp = 3, .tp = 4,
+                            .t0 = 5, .t1 = 6, .t2 = 7, .s0 = 8, .s1 = 9,
+                            .a0 = 10, .a1 = 11, .a2 = 12, .a3 = 13, .a4 = 14,
+                            .a5 = 15, .a6 = 16, .a7 = 17, .s2 = 18, .s3 = 19,
+                            .s4 = 20, .s5 = 21, .s6 = 22, .s7 = 23, .s8 = 24,
+                            .s9 = 25, .s10 = 26, .s11 = 27, .t3 = 28, .t4 = 29,
+                            .t5 = 30, .t6 = 31 };
+
+    printf("Initial register state:\n");
     get_registers(&state);
     regs.states[regs.count++] = state;
 
-    // Save the register state
-    save_register_dump(&regs, "../test_compare/test_sub.txt");
+    // Simulate SW instruction to store 'a0' into memory
+    unsigned long memory[10] = {0};  // Simulated memory
+    sw_instruction(&memory[0], state.a0);  // Store 'a0' at address 0
+
+    // Display memory content
+    printf("Memory at address 0: 0x%lx\n", memory[0]);
+
+    // Save the register dump
+    save_register_dump(&regs, "../test_compare/test_sw_dump.txt");
 
     return 0;
 }

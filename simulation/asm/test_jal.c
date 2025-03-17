@@ -82,6 +82,7 @@ void load_register_dump(RegisterDump *dump, const char *filename) {
 
 // Function to fetch register values using RISC-V inline assembly
 void get_registers(RegisterState *regs) {
+    /* Max of 30 input operands in a single asm statement */
     /* First block: capture 16 registers */
     __asm__ volatile (
         "mv %0, ra\n"
@@ -138,18 +139,55 @@ void get_registers(RegisterState *regs) {
    printf("  s6 = 0x%lx, s7 = 0x%lx, s8 = 0x%lx\n", regs->s6, regs->s7, regs->s8);
    printf("  s9 = 0x%lx, s10 = 0x%lx, s11 = 0x%lx\n", regs->s9, regs->s10, regs->s11);
    printf("  t3 = 0x%lx, t4 = 0x%lx, t5 = 0x%lx, t6 = 0x%lx\n", regs->t3, regs->t4, regs->t5, regs->t6);
+   printf("---------------------------------------\n");
 }
 
 int main() {
     RegisterDump regs;
     regs.count = 0;
 
-    RegisterState state = {0};
+    // Initializing RegisterState 
+    int i = 0;
+    RegisterState state = { .ra = i, .sp = i + 1, .gp = i + 2, .tp = i + 3,
+                            .t0 = i + 4, .t1 = i + 5, .t2 = i + 6, .s0 = i + 7, .s1 = i + 8,
+                            .a0 = i + 9, .a1 = i + 10, .a2 = i + 11, .a3 = i + 12, .a4 = i + 13,
+                            .a5 = i + 14, .a6 = i + 15, .a7 = i + 16, .s2 = i + 17, .s3 = i + 18,
+                            .s4 = i + 19, .s5 = i + 20, .s6 = i + 21, .s7 = i + 22, .s8 = i + 23,
+                            .s9 = i + 24, .s10 = i + 25, .s11 = i + 26, .t3 = i + 27, .t4 = i + 28,
+                            .t5 = i + 29, .t6 = i + 30 };
+
+    printf("Initial register state:\n");
     get_registers(&state);
     regs.states[regs.count++] = state;
 
-    // Save the register state
-    save_register_dump(&regs, "../test_compare/test_sub.txt");
+    __asm__ volatile (
+        "xor  t1, t1, t1\n"    // t1 = 0
+        "xor  s2, s2, s2\n"    // s2 = 0
+        "xor  s3, s3, s3\n"    // s3 = 0
+    );
+    printf("Set registers to 0:\n");
+    get_registers(&state);
+    regs.states[regs.count++] = state;
+
+    __asm__ volatile (
+        "jal   target\n"  // Jump to target address (and store return address in ra)
+    );
+    printf("Executed JAL instruction (jumped to target address).\n");
+    get_registers(&state);
+    regs.states[regs.count++] = state;
+
+    // Simulate target address label
+    __asm__ volatile (
+        "target:\n"
+        "addi s4, s4, 1\n"  // Increment s4 to show the jump
+    );
+
+    printf("Target address reached and executed.\n");
+    get_registers(&state);
+    regs.states[regs.count++] = state;
+
+    // Save the register dump
+    save_register_dump(&regs, "../test_compare/test_jal_dump.txt");
 
     return 0;
 }

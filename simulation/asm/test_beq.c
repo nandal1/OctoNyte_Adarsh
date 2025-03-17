@@ -42,47 +42,8 @@ void save_register_dump(const RegisterDump *dump, const char *filename) {
     fclose(file);
 }
 
-// Function to load register dumps from a text file
-void load_register_dump(RegisterDump *dump, const char *filename) {
-    FILE *file = fopen(filename, "r");
-    if (!file) {
-        perror("Failed to open file");
-        return;
-    }
-
-    dump->count = 0;
-    while (dump->count < MAX_DUMPS &&
-           fscanf(file, "Dump %*d:\n"
-                        "ra=%lu sp=%lu gp=%lu tp=%lu\n"
-                        "t0=%lu t1=%lu t2=%lu s0=%lu s1=%lu\n"
-                        "a0=%lu a1=%lu a2=%lu a3=%lu a4=%lu a5=%lu a6=%lu a7=%lu\n"
-                        "s2=%lu s3=%lu s4=%lu s5=%lu s6=%lu s7=%lu s8=%lu s9=%lu s10=%lu s11=%lu\n"
-                        "t3=%lu t4=%lu t5=%lu t6=%lu\n\n",
-                  &dump->states[dump->count].ra, &dump->states[dump->count].sp,
-                  &dump->states[dump->count].gp, &dump->states[dump->count].tp,
-                  &dump->states[dump->count].t0, &dump->states[dump->count].t1,
-                  &dump->states[dump->count].t2, &dump->states[dump->count].s0,
-                  &dump->states[dump->count].s1, &dump->states[dump->count].a0,
-                  &dump->states[dump->count].a1, &dump->states[dump->count].a2,
-                  &dump->states[dump->count].a3, &dump->states[dump->count].a4,
-                  &dump->states[dump->count].a5, &dump->states[dump->count].a6,
-                  &dump->states[dump->count].a7, &dump->states[dump->count].s2,
-                  &dump->states[dump->count].s3, &dump->states[dump->count].s4,
-                  &dump->states[dump->count].s5, &dump->states[dump->count].s6,
-                  &dump->states[dump->count].s7, &dump->states[dump->count].s8,
-                  &dump->states[dump->count].s9, &dump->states[dump->count].s10,
-                  &dump->states[dump->count].s11, &dump->states[dump->count].t3,
-                  &dump->states[dump->count].t4, &dump->states[dump->count].t5,
-                  &dump->states[dump->count].t6) == 32) {
-        dump->count++;
-    }
-
-    fclose(file);
-}
-
 // Function to fetch register values using RISC-V inline assembly
 void get_registers(RegisterState *regs) {
-    /* First block: capture 16 registers */
     __asm__ volatile (
         "mv %0, ra\n"
         "mv %1, sp\n"
@@ -104,10 +65,9 @@ void get_registers(RegisterState *regs) {
           "=r"(regs->t0), "=r"(regs->t1), "=r"(regs->t2), "=r"(regs->s0),
           "=r"(regs->s1), "=r"(regs->a0), "=r"(regs->a1), "=r"(regs->a2),
           "=r"(regs->a3), "=r"(regs->a4), "=r"(regs->a5), "=r"(regs->a6)
-   );
+    );
 
-   /* Second block: capture remaining 15 registers */
-   __asm__ volatile (
+    __asm__ volatile (
         "mv %0, a7\n"
         "mv %1, s2\n"
         "mv %2, s3\n"
@@ -126,30 +86,45 @@ void get_registers(RegisterState *regs) {
         : "=r"(regs->a7), "=r"(regs->s2), "=r"(regs->s3), "=r"(regs->s4), "=r"(regs->s5),
           "=r"(regs->s6), "=r"(regs->s7), "=r"(regs->s8), "=r"(regs->s9), "=r"(regs->s10),
           "=r"(regs->s11), "=r"(regs->t3), "=r"(regs->t4), "=r"(regs->t5), "=r"(regs->t6)
-   );
-
-   printf("Register state:\n");
-   printf("  ra = 0x%lx, sp = 0x%lx, gp = 0x%lx, tp = 0x%lx\n", regs->ra, regs->sp, regs->gp, regs->tp);
-   printf("  t0 = 0x%lx, t1 = 0x%lx, t2 = 0x%lx\n", regs->t0, regs->t1, regs->t2);
-   printf("  s0 = 0x%lx, s1 = 0x%lx\n", regs->s0, regs->s1);
-   printf("  a0 = 0x%lx, a1 = 0x%lx, a2 = 0x%lx, a3 = 0x%lx\n", regs->a0, regs->a1, regs->a2, regs->a3);
-   printf("  a4 = 0x%lx, a5 = 0x%lx, a6 = 0x%lx, a7 = 0x%lx\n", regs->a4, regs->a5, regs->a6, regs->a7);
-   printf("  s2 = 0x%lx, s3 = 0x%lx, s4 = 0x%lx, s5 = 0x%lx\n", regs->s2, regs->s3, regs->s4, regs->s5);
-   printf("  s6 = 0x%lx, s7 = 0x%lx, s8 = 0x%lx\n", regs->s6, regs->s7, regs->s8);
-   printf("  s9 = 0x%lx, s10 = 0x%lx, s11 = 0x%lx\n", regs->s9, regs->s10, regs->s11);
-   printf("  t3 = 0x%lx, t4 = 0x%lx, t5 = 0x%lx, t6 = 0x%lx\n", regs->t3, regs->t4, regs->t5, regs->t6);
+    );
 }
 
 int main() {
     RegisterDump regs;
     regs.count = 0;
+    RegisterState state;
 
-    RegisterState state = {0};
+    printf("Initial register state:\n");
     get_registers(&state);
     regs.states[regs.count++] = state;
 
-    // Save the register state
-    save_register_dump(&regs, "../test_compare/test_sub.txt");
+    /* BEQ Example */
+    int label_flag = 0;
+
+__asm__ volatile (
+    "li t0, 5\n"          // Load 5 into t0
+    "li t1, 5\n"          // Load 5 into t1
+    "beq t0, t1, label\n" // Branch if t0 == t1
+    "li %0, 1\n"          // If branch does NOT happen, set flag to 1
+    "j end\n"             // Jump to end
+
+    "label:\n"
+    "li %0, 2\n"          // If branch happens, set flag to 2
+
+    "end:\n"
+    : "=r"(label_flag)     // Output operand (register for flag)
+    :                      // No input operands
+    : "t0", "t1"           // Clobbered registers
+);
+
+
+    printf("BEQ Execution Result: label_flag = %d\n", label_flag);
+
+    get_registers(&state);
+    regs.states[regs.count++] = state;
+
+    // Save register dumps
+    save_register_dump(&regs, "../test_compare/test_beq_dump.txt");
 
     return 0;
 }
