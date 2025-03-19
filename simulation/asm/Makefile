@@ -5,7 +5,7 @@ CC = riscv64-linux-gnu-gcc
 	CFLAGS = -static -O2 -Wall
 
 # List of target executables
-TARGETS = test_slt test_addi test_nand test_sub test_load test_div test_nop test_xor test_beq
+TARGETS = test_sltu test_slt test_addi test_nand test_sub test_load test_div test_nop test_xor test_beq
 
 # Directory to store the compiled binaries
 BIN_DIR = bin
@@ -52,6 +52,10 @@ test_addi: test_addi.c
 # Build test_slt from test_slt.c
 test_slt: test_slt.c
 	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_slt test_slt.c
+
+# Build test_sltu from test_sltu.c
+test_sltu: test_sltu.c
+	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_sltu test_sltu.c
 
 # Clean up build artifacts
 clean:

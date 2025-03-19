@@ -2,16 +2,17 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdint.h>
 
 // Define output file
 #define OUTPUT_FILE "slt_dump.txt"
 
 // Structure to hold register values
 typedef struct {
-    unsigned long ra, sp, gp, tp;
-    unsigned long t0, t1, t2, t3, t4, t5, t6;
-    unsigned long s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11;
-    unsigned long a0, a1, a2, a3, a4, a5, a6, a7;
+    uint64_t ra, sp, gp, tp;
+    uint64_t t0, t1, t2, t3, t4, t5, t6;
+    uint64_t s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11;
+    uint64_t a0, a1, a2, a3, a4, a5, a6, a7;
 } RegisterState;
 
 // Function to capture register values
@@ -73,11 +74,14 @@ void get_registers(RegisterState *regs) {
 void save_register_dump(const RegisterState *state) {
     int fd;
     char buffer[512];
-    int len;
+    ssize_t len;
 
     // Open file
-    fd = open(OUTPUT_FILE, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    if (fd < 0) return;
+    fd = open(OUTPUT_FILE, O_WRONLY | O_CREAT | O_APPEND, 0644);
+    if (fd < 0) {
+        perror("Error opening file");
+        return;
+    }
 
     // Format the register values into a buffer
     len = snprintf(buffer, sizeof(buffer),
@@ -95,7 +99,9 @@ void save_register_dump(const RegisterState *state) {
     );
 
     // Write buffer to file
-    write(fd, buffer, len);
+    if (write(fd, buffer, len) < 0) {
+        perror("Error writing to file");
+    }
 
     // Close file
     close(fd);
