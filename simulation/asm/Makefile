@@ -5,7 +5,7 @@ CC = riscv64-linux-gnu-gcc
 CFLAGS = -static -O2 -Wall
 
 # List of target executables
-TARGETS = test_lb test_srli test_slli test_xori test_ori test_andi test_bgeu test_bge test_bltu test_blt test_bne test_jal test_li test_subu test_sltu test_slt test_addi test_nand test_sub test_load test_div test_nop test_xor test_beq
+TARGETS = test_sw test_lb test_srli test_slli test_xori test_ori test_andi test_bgeu test_bge test_bltu test_blt test_bne test_jal test_li test_subu test_sltu test_slt test_addi test_nand test_sub test_load test_div test_nop test_xor test_beq
 
 # Directory to store the compiled binaries
 BIN_DIR = bin
@@ -88,6 +88,9 @@ test_srli: test_srli.c
 
 test_lb: test_lb.c
 	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_lb test_lb.c
+
+test_sw: test_sw.c
+	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_sw test_sw.c
 
 # Run all executables
 run: all
