@@ -5,6 +5,9 @@
 
 #define OUTPUT_FILE "lb_dump.txt"
 
+// ✅ Declare `data` globally to prevent `undefined reference` error
+volatile static uint8_t data = 0xAB;  // Sample byte in memory
+
 // Structure to hold register values
 typedef struct {
     uint64_t address;
@@ -44,26 +47,24 @@ void save_register_dump(const RegisterState *state) {
     close(fd);
 }
 
-// Function to perform `lb`
+// ✅ Function to perform `lb`
 void load_byte() {
-    static uint8_t data = 0xAB;  // Sample byte in memory
-
     __asm__ volatile (
-        "la a0, data\n"   // Load address of `data` into a0
+        "lla a0, data\n"  // Load address of `data` into a0 (position-independent)
         "lb a1, 0(a0)\n"  // Load byte from memory address in a0 into a1
-        "ret\n"           // Return from function
+        : 
+        : "r"(data)       // Inform the compiler about `data`
+        : "a0", "a1", "memory"  // Clobber memory to prevent optimization issues
     );
 }
 
 int main() {
     RegisterState state;
 
-    // Call the function that executes `lb`
-    __asm__ volatile (
-        "call load_byte\n"
-    );
+    // ✅ Call function that executes `lb`
+    load_byte();
 
-    // Capture register state after executing `lb`
+    // ✅ Capture register state after executing `lb`
     get_registers(&state);
     save_register_dump(&state);
 

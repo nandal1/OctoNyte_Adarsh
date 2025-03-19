@@ -5,6 +5,9 @@
 
 #define OUTPUT_FILE "sw_dump.txt"
 
+// ✅ Declare `data` properly in global scope and mark it as volatile
+volatile static int32_t data = 0;
+
 // Structure to hold memory address and stored value
 typedef struct {
     uint64_t address;
@@ -44,27 +47,25 @@ void save_register_dump(const RegisterState *state) {
     close(fd);
 }
 
-// Function to perform `sw`
+// ✅ Function to perform `sw` (store word)
 void store_word() {
-    static int32_t data = 0;  // Memory location to store the word
-
     __asm__ volatile (
         "li a1, 0x12345678\n"  // Load immediate value into a1 (word to store)
-        "la a0, data\n"         // Load address of `data` into a0
-        "sw a1, 0(a0)\n"        // Store word in memory address in a0
-        "ret\n"                 // Return from function
+        "lla a0, data\n"        // Load address of `data` using lla (position-independent code)
+        "sw a1, 0(a0)\n"        // Store word at memory address in a0
+        : 
+        : "r"(data)             // Inform the compiler about `data`
+        : "a0", "a1", "memory"  // Clobber memory to prevent optimization issues
     );
 }
 
 int main() {
     RegisterState state;
 
-    // Call the function that executes `sw`
-    __asm__ volatile (
-        "call store_word\n"
-    );
+    // ✅ Call function to store word
+    store_word();
 
-    // Capture register state after executing `sw`
+    // ✅ Capture register state after executing `sw`
     get_registers(&state);
     save_register_dump(&state);
 
