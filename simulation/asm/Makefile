@@ -2,10 +2,10 @@
 CC = riscv64-linux-gnu-gcc
 
 # Compiler flags: static linking, optimization, and all warnings enabled.
-	CFLAGS = -static -O2 -Wall
+CFLAGS = -static -O2 -Wall
 
 # List of target executables
-TARGETS = test_sltu test_slt test_addi test_nand test_sub test_load test_div test_nop test_xor test_beq
+TARGETS = test_jal test_li test_subu test_sltu test_slt test_addi test_nand test_sub test_load test_div test_nop test_xor test_beq
 
 # Directory to store the compiled binaries
 BIN_DIR = bin
@@ -16,49 +16,58 @@ $(shell mkdir -p $(BIN_DIR))
 # Default target: build all executables
 all: $(TARGETS)
 
-#Build test_xor from test_beq.c
+# Build each test program
 test_beq: test_beq.c
 	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_beq test_beq.c
 
-#Build test_xor from test_xor.c
-test_div: test_xor.c
+test_xor: test_xor.c
 	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_xor test_xor.c
 
- #Build test_nop from test_nop.c
 test_nop: test_nop.c
 	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_nop test_nop.c
 
-# Build test_mul from test_mul.c
-test_div: test_mul.c
-	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_mul test_mul.c
+test_div: test_div.c
+	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_div test_div.c
 
-
-# Build test_load from test_load.c
 test_load: test_load.c
 	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_load test_load.c 
 
-# Build test_sub from test_sub.c
 test_sub: test_sub.c
 	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_sub test_sub.c
 
-# Build test_nand from test_nand.c
 test_nand: test_nand.c
 	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_nand test_nand.c
 
-# Build test_addi from test_addi.c
 test_addi: test_addi.c
 	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_addi test_addi.c
 
-# Build test_slt from test_slt.c
 test_slt: test_slt.c
 	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_slt test_slt.c
 
-# Build test_sltu from test_sltu.c
 test_sltu: test_sltu.c
 	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_sltu test_sltu.c
+
+test_subu: test_subu.c
+	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_subu test_subu.c
+
+test_li: test_li.c
+	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_li test_li.c
+
+test_jal: test_jal.c
+	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_jal test_jal.c
+
+# Run all executables
+run: all
+	@echo "Running all test programs..."
+	@for file in $(BIN_DIR)/*; do \
+		if [ -x "$$file" ]; then \
+			echo "Running $$file..."; \
+			qemu-riscv64 "$$file"; \
+		fi; \
+	done
 
 # Clean up build artifacts
 clean:
 	rm -f $(BIN_DIR)/*
 
-.PHONY: all clean
+.PHONY: all clean runb
