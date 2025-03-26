@@ -28,8 +28,12 @@ set ::env(FP_CORE_AREA) "0 0 700 700"
 # Disable automatic macro placement (Parquet)
 set ::env(RUN_BASIC_MP) 0
 
+# Use preplaced def file for lane placements
+set ::env(FP_DEF_TEMPLATE) "$::env(DESIGN_DIR)/src/pre_placed.def"
+
 # Explicit Macro placement
-set ::env(FP_MACRO_PLACEMENT_CFG) "$::env(DESIGN_DIR)/scripts/regfile_2r1w_floorplan.tcl"
+#set ::env(FP_MACRO_PLACEMENT_CFG) "$::env(DESIGN_DIR)/scripts/regfile_2r1w_floorplan.tcl"
+#set ::env(FP_PDN_MACRO_HOOK) "$::env(DESIGN_DIR)/scripts/regfile_2r1w_floorplan.tcl"
 
 
 # -----------------------------------------------------------------------------
