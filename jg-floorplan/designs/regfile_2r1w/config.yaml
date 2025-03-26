@@ -1,0 +1,54 @@
+DESIGN_NAME: "regfile_2r1w"
+
+# Source Files
+VERILOG_FILES:
+  - "src/regfile_2r1w.v"
+  - "src/mem_1r1w_blackbox.v"
+
+CLOCK_PORT: "clk"
+CLOCK_PERIOD: 2.0
+
+# Floorplan
+FP_SIZING: "absolute"
+DIE_AREA: [0, 0, 700, 700]
+
+# Use an existing DEF template for placement
+FP_DEF_TEMPLATE: "src/manual_placement.def"
+
+
+
+
+
+# Hard Macro: mem_1r1w references
+# (If you want to reference them as macros for place & route, use the macros key in OpenLane2.
+# For now, we only specify optional LEF/GDS references.)
+EXTRA_LEFS:
+  - "../mem_1r1w/runs/output/final/lef/mem_1r1w.lef"
+EXTRA_GDS_FILES:
+  - "../mem_1r1w/runs/output/final/gds/mem_1r1w.gds"
+
+
+# SDC Constraints
+PNR_SDC_FILE: "src/regfile_2r1w.sdc"
+SIGNOFF_SDC_FILE: "src/regfile_2r1w.sdc"
+
+PDK: "sky130A"
+STD_CELL_LIBRARY: "sky130_fd_sc_hd"
+
+
+excluded_stages:
+  - GeneratePDN
+
+custom_stages:
+  - name: MyPDN
+    depends: [CutRows]  # The stage just before normal PDN
+    run:
+      - openroad -python << 'EOF'
+          read_def ...
+          # 1) Source your global connect script
+          source scripts/global_connect.tcl
+
+          # 2) Then do normal PDN
+          pdngen
+          write_def final_placed.def
+        EOF

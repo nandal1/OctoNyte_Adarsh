@@ -10,9 +10,6 @@ module regfile_2r1w(
     input  wire [3:0]   rd_addr,
     input  wire [31:0]  rd_wdata,
     input  wire         rd_write,
-
-    input  wire         vccd1,    // <--- Add power pins
-    input  wire         vssd1     // <--- Add ground pins
 );
 
     mem_1r1w lane0 (
@@ -23,9 +20,6 @@ module regfile_2r1w(
         .write_addr (rd_addr),
         .write      (rd_write),
         .write_data (rd_wdata),
-
-        .VPWR       (vccd1),      // <--- Tie to top-level power
-        .VGND       (vssd1)
     );
 
     mem_1r1w lane1 (
@@ -36,9 +30,6 @@ module regfile_2r1w(
         .write_addr (rd_addr),
         .write      (rd_write),
         .write_data (rd_wdata),
-
-        .VPWR       (vccd1),
-        .VGND       (vssd1)
     );
 
 endmodule
