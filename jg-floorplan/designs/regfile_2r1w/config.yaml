@@ -6,7 +6,7 @@ VERILOG_FILES:
   - "src/mem_1r1w_blackbox.v"
 
 CLOCK_PORT: "clk"
-CLOCK_PERIOD: 2.0
+CLOCK_PERIOD: 10.0
 
 # Floorplan
 FP_SIZING: "absolute"

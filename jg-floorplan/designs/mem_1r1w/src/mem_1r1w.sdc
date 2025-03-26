@@ -1,11 +1,11 @@
-# Synopsys Design Constraints file for 500MHz operation
+# Synopsys Design Constraints file for 100MHz operation
 #
-# This file sets up a 500MHz clock (period = 2.0 ns) with typical input/output delays,
+# This file sets up a 100MHz clock (period = 10.0 ns) with typical input/output delays,
 # clock uncertainty, and false path constraints for asynchronous reset.
 #
 
-# Create primary clock on port "clk" with a period of 2.0 ns (500MHz)
-create_clock -name clk -period 2.0 [get_ports clk]
+# Create primary clock on port "clk" with a period of 10.0 ns (500MHz)
+create_clock -name clk -period 10.0 [get_ports clk]
 
 # Set clock uncertainty to account for clock jitter (adjust as needed)
 set_clock_uncertainty 0.1 [get_ports clk]

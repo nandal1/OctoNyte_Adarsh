@@ -7,7 +7,7 @@ VERILOG_FILES:
   - "src/mem_1r1w.v"
 
 CLOCK_PORT: "clk"
-CLOCK_PERIOD: 2.0
+CLOCK_PERIOD: 10.0
 
 # Floorplan settings
 FP_SIZING: "absolute"
