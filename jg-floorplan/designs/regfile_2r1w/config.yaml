@@ -12,11 +12,19 @@ CLOCK_PERIOD: 10.0
 FP_SIZING: "absolute"
 DIE_AREA: [0, 0, 700, 700]
 
+#SYNTH_FLATTEN_HIERARCHY: 0
+
+MACROS:
+  mem_1r1w:
+    lef:
+      - "../mem_1r1w/runs/output/final/lef/mem_1r1w.lef"
+    gds:
+      - "../mem_1r1w/runs/output/final/gds/mem_1r1w.gds"
+
+
+
 # Use an existing DEF template for placement
 FP_DEF_TEMPLATE: "src/manual_placement.def"
-
-
-
 
 
 # Hard Macro: mem_1r1w references
@@ -36,19 +44,6 @@ PDK: "sky130A"
 STD_CELL_LIBRARY: "sky130_fd_sc_hd"
 
 
-excluded_stages:
-  - GeneratePDN
+# PDN_BEFORE_SCRIPTS:
+#   - "scripts/global_connect.tcl"
 
-custom_stages:
-  - name: MyPDN
-    depends: [CutRows]  # The stage just before normal PDN
-    run:
-      - openroad -python << 'EOF'
-          read_def ...
-          # 1) Source your global connect script
-          source scripts/global_connect.tcl
-
-          # 2) Then do normal PDN
-          pdngen
-          write_def final_placed.def
-        EOF
