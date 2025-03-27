@@ -4,7 +4,6 @@
 
 #define MAX_DUMPS 100  // Maximum number of state dumps
 
-// Structure to store RISC-V register states
 typedef struct {
     unsigned long ra, sp, gp, tp;
     unsigned long t0, t1, t2;
@@ -15,8 +14,6 @@ typedef struct {
     unsigned long t3, t4, t5, t6;
 } RegisterState;
 
-
-// Structure to store multiple register dumps
 typedef struct {
     RegisterState states[MAX_DUMPS];
     int count;
@@ -85,6 +82,8 @@ void load_register_dump(RegisterDump *dump, const char *filename) {
 
 // Function to fetch register values using RISC-V inline assembly
 void get_registers(RegisterState *regs) {
+    /* Max of 30 input operands in a single asm statement */
+    /* First block: capture 16 registers */
     __asm__ volatile (
         "mv %0, ra\n"
         "mv %1, sp\n"
@@ -106,26 +105,89 @@ void get_registers(RegisterState *regs) {
           "=r"(regs->t0), "=r"(regs->t1), "=r"(regs->t2), "=r"(regs->s0),
           "=r"(regs->s1), "=r"(regs->a0), "=r"(regs->a1), "=r"(regs->a2),
           "=r"(regs->a3), "=r"(regs->a4), "=r"(regs->a5), "=r"(regs->a6)
-    );
+   );
 
-    printf("Register state captured:\n");
-    printf("  ra = 0x%lx, sp = 0x%lx, gp = 0x%lx, tp = 0x%lx\n", regs->ra, regs->sp, regs->gp, regs->tp);
-    printf("  t0 = 0x%lx, t1 = 0x%lx, t2 = 0x%lx\n", regs->t0, regs->t1, regs->t2);
-    printf("  s0 = 0x%lx, s1 = 0x%lx\n", regs->s0, regs->s1);
-    printf("  a0 = 0x%lx, a1 = 0x%lx, a2 = 0x%lx, a3 = 0x%lx\n", regs->a0, regs->a1, regs->a2, regs->a3);
+   /* Second block: capture remaining 15 registers */
+   __asm__ volatile (
+        "mv %0, a7\n"
+        "mv %1, s2\n"
+        "mv %2, s3\n"
+        "mv %3, s4\n"
+        "mv %4, s5\n"
+        "mv %5, s6\n"
+        "mv %6, s7\n"
+        "mv %7, s8\n"
+        "mv %8, s9\n"
+        "mv %9, s10\n"
+        "mv %10, s11\n"
+        "mv %11, t3\n"
+        "mv %12, t4\n"
+        "mv %13, t5\n"
+        "mv %14, t6\n"
+        : "=r"(regs->a7), "=r"(regs->s2), "=r"(regs->s3), "=r"(regs->s4), "=r"(regs->s5),
+          "=r"(regs->s6), "=r"(regs->s7), "=r"(regs->s8), "=r"(regs->s9), "=r"(regs->s10),
+          "=r"(regs->s11), "=r"(regs->t3), "=r"(regs->t4), "=r"(regs->t5), "=r"(regs->t6)
+   );
+
+   printf("Register state:\n");
+   printf("  ra = 0x%lx, sp = 0x%lx, gp = 0x%lx, tp = 0x%lx\n", regs->ra, regs->sp, regs->gp, regs->tp);
+   printf("  t0 = 0x%lx, t1 = 0x%lx, t2 = 0x%lx\n", regs->t0, regs->t1, regs->t2);
+   printf("  s0 = 0x%lx, s1 = 0x%lx\n", regs->s0, regs->s1);
+   printf("  a0 = 0x%lx, a1 = 0x%lx, a2 = 0x%lx, a3 = 0x%lx\n", regs->a0, regs->a1, regs->a2, regs->a3);
+   printf("  a4 = 0x%lx, a5 = 0x%lx, a6 = 0x%lx, a7 = 0x%lx\n", regs->a4, regs->a5, regs->a6, regs->a7);
+   printf("  s2 = 0x%lx, s3 = 0x%lx, s4 = 0x%lx, s5 = 0x%lx\n", regs->s2, regs->s3, regs->s4, regs->s5);
+   printf("  s6 = 0x%lx, s7 = 0x%lx, s8 = 0x%lx\n", regs->s6, regs->s7, regs->s8);
+   printf("  s9 = 0x%lx, s10 = 0x%lx, s11 = 0x%lx\n", regs->s9, regs->s10, regs->s11);
+   printf("  t3 = 0x%lx, t4 = 0x%lx, t5 = 0x%lx, t6 = 0x%lx\n", regs->t3, regs->t4, regs->t5, regs->t6);
+   printf("---------------------------------------\n");
 }
 
-// **Main function**
 int main() {
-    RegisterState regs;
-    RegisterDump dump;
+    RegisterDump regs;
+    regs.count = 0;
 
-    get_registers(&regs); // Capture registers
-    dump.states[0] = regs;
-    dump.count = 1;
+    // Initializing RegisterState 
+    int i = 0;
+    RegisterState state = { .ra = i, .sp = i + 1, .gp = i + 2, .tp = i + 3,
+                            .t0 = i + 4, .t1 = i + 5, .t2 = i + 6, .s0 = i + 7, .s1 = i + 8,
+                            .a0 = i + 9, .a1 = i + 10, .a2 = i + 11, .a3 = i + 12, .a4 = i + 13,
+                            .a5 = i + 14, .a6 = i + 15, .a7 = i + 16, .s2 = i + 17, .s3 = i + 18,
+                            .s4 = i + 19, .s5 = i + 20, .s6 = i + 21, .s7 = i + 22, .s8 = i + 23,
+                            .s9 = i + 24, .s10 = i + 25, .s11 = i + 26, .t3 = i + 27, .t4 = i + 28,
+                            .t5 = i + 29, .t6 = i + 30 };
 
-    save_register_dump(&dump, "register_dump.txt"); // Save dump to file
-    printf("Register dump saved to register_dump.txt\n");
+    printf("Initial register state:\n");
+    get_registers(&state);
+    regs.states[regs.count++] = state;
+
+    __asm__ volatile (
+        "xor  t1, t1, t1\n"    // t1 = 0
+        "xor  s2, s2, s2\n"    // s2 = 0
+        "xor  s3, s3, s3\n"    // s3 = 0
+    );
+    printf("Set registers to 0:\n");
+    get_registers(&state);
+    regs.states[regs.count++] = state;
+
+    __asm__ volatile (
+        "jal   target\n"  // Jump to target address (and store return address in ra)
+    );
+    printf("Executed JAL instruction (jumped to target address).\n");
+    get_registers(&state);
+    regs.states[regs.count++] = state;
+
+    // Simulate target address label
+    __asm__ volatile (
+        "target:\n"
+        "addi s4, s4, 1\n"  // Increment s4 to show the jump
+    );
+
+    printf("Target address reached and executed.\n");
+    get_registers(&state);
+    regs.states[regs.count++] = state;
+
+    // Save the register dump
+    save_register_dump(&regs, "../test_compare/test_jal_dump.txt");
 
     return 0;
 }
