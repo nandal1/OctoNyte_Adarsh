@@ -12,7 +12,7 @@ CLOCK_PERIOD: 10.0
 # Floorplan settings
 FP_SIZING: "absolute"
 DIE_AREA: [0, 0, 260, 280]
-FP_PPL_MODE: "matching"  # Replaces deprecated FP_IO_MODE
+FP_PPL_MODE: "matching"  
 
 # Power & Ground
 VDD_NETS: ["vccd1"]
