@@ -41,4 +41,5 @@ class BranchUnit extends Module {
 
   //Next PC calculation
   io.nextPc := Mux(io.taken, io.target, io.pc + 4.U)
+  
 }
