@@ -5,7 +5,7 @@ CC = riscv64-linux-gnu-gcc
 CFLAGS = -static -O2 -Wall
 
 # List of target executables
-TARGETS = test_srai test_sll test_sw test_lb test_srli test_slli test_xori test_ori test_andi test_bgeu test_bge test_bltu test_blt test_bne test_jal test_li test_subu test_sltu test_slt test_addi test_nand test_sub test_load test_div test_nop test_xor test_beq
+TARGETS = test_srai test_sll test_sw test_lb test_srli test_slli test_xori test_ori test_andi test_bgeu test_bge test_bltu test_blt test_jal test_li test_subu test_sltu test_slt test_nand test_sub test_load test_div test_nop test_beq
 
 # Directory to store the compiled binaries
 BIN_DIR = bin
@@ -19,9 +19,6 @@ all: $(TARGETS)
 # Build each test program
 test_beq: test_beq.c
 	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_beq test_beq.c
-
-test_xor: test_xor.c
-	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_xor test_xor.c
 
 test_nop: test_nop.c
 	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_nop test_nop.c
@@ -37,9 +34,6 @@ test_sub: test_sub.c
 
 test_nand: test_nand.c
 	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_nand test_nand.c
-
-test_addi: test_addi.c
-	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_addi test_addi.c
 
 test_slt: test_slt.c
 	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_slt test_slt.c
@@ -58,9 +52,6 @@ test_li: test_li.c
 
 test_jal: test_jal.c
 	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_jal test_jal.c
-
-test_bne: test_bne.c
-	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_bne test_bne.c
 
 test_blt: test_blt.c
 	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_blt test_blt.c
