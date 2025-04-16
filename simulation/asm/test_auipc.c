@@ -1,9 +1,8 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
-#include <fcntl.h>
-#include <unistd.h>
 
-#define OUTPUT_FILE "auipc_dump.txt"
+#define MAX_DUMPS 100  // Maximum number of state dumps
 
 typedef struct {
     unsigned long ra, sp, gp, tp;
@@ -15,38 +14,35 @@ typedef struct {
     unsigned long t3, t4, t5, t6;
 } RegisterState;
 
-// Function to save a single register state to a file
-void save_register_dump(const RegisterState *state) {
-    int fd = open(OUTPUT_FILE, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    if (fd < 0) {
-        perror("Error opening file");
+typedef struct {
+    RegisterState states[MAX_DUMPS];
+    int count;
+} RegisterDump;
+
+// Function to save register dumps to a text file
+void save_register_dump(const RegisterDump *dump, const char *filename) {
+    FILE *file = fopen(filename, "w");
+    if (!file) {
+        perror("Failed to open file");
         return;
     }
 
-    char buffer[1024];
-    int len = snprintf(buffer, sizeof(buffer),
-        "AUIPC Register Dump:\n"
-        "ra=%lu sp=%lu gp=%lu tp=%lu\n"
-        "t0=%lu t1=%lu t2=%lu s0=%lu s1=%lu\n"
-        "a0=%lu a1=%lu a2=%lu a3=%lu a4=%lu a5=%lu a6=%lu a7=%lu\n"
-        "s2=%lu s3=%lu s4=%lu s5=%lu s6=%lu s7=%lu s8=%lu s9=%lu s10=%lu s11=%lu\n"
-        "t3=%lu t4=%lu t5=%lu t6=%lu\n",
-        state->ra, state->sp, state->gp, state->tp,
-        state->t0, state->t1, state->t2, state->s0, state->s1,
-        state->a0, state->a1, state->a2, state->a3, state->a4, state->a5, state->a6, state->a7,
-        state->s2, state->s3, state->s4, state->s5, state->s6, state->s7, state->s8, state->s9, state->s10, state->s11,
-        state->t3, state->t4, state->t5, state->t6
-    );
-
-    ssize_t bytes_written = write(fd, buffer, len);
-    if (bytes_written < 0) {
-        perror("Error writing to file");
+    for (int i = 0; i < dump->count; i++) {
+        RegisterState state = dump->states[i];
+        fprintf(file, "Dump %d:\n", i + 1);
+        fprintf(file, "ra=%lu sp=%lu gp=%lu tp=%lu\n", state.ra, state.sp, state.gp, state.tp);
+        fprintf(file, "t0=%lu t1=%lu t2=%lu s0=%lu s1=%lu\n", state.t0, state.t1, state.t2, state.s0, state.s1);
+        fprintf(file, "a0=%lu a1=%lu a2=%lu a3=%lu a4=%lu a5=%lu a6=%lu a7=%lu\n",
+                state.a0, state.a1, state.a2, state.a3, state.a4, state.a5, state.a6, state.a7);
+        fprintf(file, "s2=%lu s3=%lu s4=%lu s5=%lu s6=%lu s7=%lu s8=%lu s9=%lu s10=%lu s11=%lu\n",
+                state.s2, state.s3, state.s4, state.s5, state.s6, state.s7, state.s8, state.s9, state.s10, state.s11);
+        fprintf(file, "t3=%lu t4=%lu t5=%lu t6=%lu\n\n", state.t3, state.t4, state.t5, state.t6);
     }
 
-    close(fd);
+    fclose(file);
 }
 
-// Function to fetch register values
+// Function to fetch register values using RISC-V inline assembly
 void get_registers(RegisterState *regs) {
     __asm__ volatile (
         "mv %0, ra\n"
@@ -92,19 +88,31 @@ void get_registers(RegisterState *regs) {
           "=r"(regs->s9), "=r"(regs->s10), "=r"(regs->s11), "=r"(regs->t3),
           "=r"(regs->t4), "=r"(regs->t5), "=r"(regs->t6)
     );
+
+    printf("Register state:\n");
+    printf("  a0 = 0x%lx, a1 = 0x%lx, a2 = 0x%lx, a3 = 0x%lx\n", regs->a0, regs->a1, regs->a2, regs->a3);
+    printf("  a4 = 0x%lx, a5 = 0x%lx, a6 = 0x%lx, a7 = 0x%lx\n", regs->a4, regs->a5, regs->a6, regs->a7);
+    printf("  t0 = 0x%lx, t1 = 0x%lx, t2 = 0x%lx\n", regs->t0, regs->t1, regs->t2);
+    printf("---------------------------------------\n");
 }
 
 int main() {
-    RegisterState state;
+    RegisterDump regs;
+    regs.count = 0;
 
-    // Execute AUIPC instruction
+    RegisterState state;
+    get_registers(&state);
+    regs.states[regs.count++] = state;
+
+    /* AUIPC Instruction */
     __asm__ volatile (
-        "auipc t1, 0x12345\n"
+        "auipc t1, 0x12345\n"  // AUIPC loads 0x12345 << 12 and adds PC
     );
 
-    // Capture and save registers after AUIPC
     get_registers(&state);
-    save_register_dump(&state);
+    regs.states[regs.count++] = state;
+
+    save_register_dump(&regs, "../test_compare/test_auipc_dump.txt");
 
     return 0;
 }
