@@ -40,9 +40,13 @@ object GenerateHierarchicalRTL extends App {
     //  (() => new scabook.addersubtractors.MultifunctionAdderSubtractor64, "MultifunctionAdderSubtractor64"), 
     //  (() => new OctoNyte.ExecutionUnits.RISCVAdderSubtractor32, "RISCVAdderSubtractor32"),
     //  (() => new TetraNyte.RegFileMT2R1WVec, "RegFileMT2R1WVec"),
-    (() => new OctoNyte.ExecutionUnits.ALU32, "ALU32"),
-    (() => new OctoNyte.LoadUnits.LoadUnit, "LoadUnit"),
-    (() => new TetraNyte.TetraNyteCore, "TetraNyteCore"),
+    //(() => new OctoNyte.ExecutionUnits.ALU32, "ALU32"),
+    //(() => new OctoNyte.LoadUnits.LoadUnit, "LoadUnit"),
+     //(() => new OctoNyte.StoreUnits.StoreUnit, "StoreUnit"),
+    //(() => new TetraNyte.TetraNyteCore, "TetraNyteCore"),
+    //(() => new OctoNyte.BranchUnit.BranchUnit, "BranchUnit"),
+    (() => new OctoNyte.OctoNyteCPU.OctoNyteCPU, "OctoNyteCPU"),
+
     //(() => new scabook.ALUs.ALU64, "ALU64"), 
   )
 
@@ -261,7 +265,7 @@ object GenerateHierarchicalRTL extends App {
             prep -top $moduleName;                         
             techmap;
             dfflibmap -liberty $skywaterPdkLib; 
-            abc -liberty $skywaterPdkLib-script +abc_map_new_area.script;  
+            abc -liberty $skywaterPdkLib;  
             opt_clean;
             stat;
             write_verilog -noattr $verilogOutFile
