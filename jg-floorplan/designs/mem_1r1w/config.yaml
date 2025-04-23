@@ -33,7 +33,8 @@ FP_PDN_VPITCH: 30
 FP_PDN_HPITCH: 30
 FP_PDN_SKIPTRIM: true
 
-
+#pins
+FP_PIN_ORDER_CFG: "scripts/pin_order.cfg"
 
 # Routing
 RT_MAX_LAYER: "met4"
