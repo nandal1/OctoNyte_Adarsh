@@ -5,7 +5,7 @@ DESIGN_NAME: "regfile_2r1w"
 # Source Files
 VERILOG_FILES:
   - "src/regfile_2r1w.v"
-  - "../mem_1r1w/src/mem_1r1w.v"
+  - "src/mem_1r1w_blackbox.v"
 
 CLOCK_PORT: "clk"
 CLOCK_PERIOD: 10.0
@@ -20,7 +20,42 @@ FP_SIZING: "absolute"
 FP_PIN_ORDER_CFG: "scripts/pin_order.cfg"
 
 FP_PPL_MODE: "matching"  
-DIE_AREA: [0, 0, 690, 230]
+DIE_AREA: [0, 0, 800, 900]
+
+
+MACROS:
+  mem_1r1w:
+    instances:
+      lane0:
+        location:
+          - 50
+          - 50
+        orientation: "N"
+      lane1:
+        location:
+          - 400
+          - 50
+        orientation: "N"
+    lef:
+      - "../mem_1r1w/runs/output/final/lef/mem_1r1w.lef"
+    gds:
+      - "../mem_1r1w/runs/output/final/gds/mem_1r1w.gds"
+    nl:
+      - "../mem_1r1w/runs/output/final/nl/mem_1r1w.nl.v"
+    spef:
+      nom_*: 
+        - "../mem_1r1w/runs/output/final/spef/nom/mem_1r1w.nom.spef"
+      min_*: 
+        - "../mem_1r1w/runs/output/final/spef/min/mem_1r1w.min.spef"
+      max_*: 
+        - "../mem_1r1w/runs/output/final/spef/max/mem_1r1w.max.spef"
+    lib:
+      nom_*:
+        - "../mem_1r1w/runs/output/final/lib/nom_tt_025C_1v80/mem_1r1w__nom_tt_025C_1v80.lib"
+      min_*:
+        - "../mem_1r1w/runs/output/final/lib/min_ss_100C_1v60/mem_1r1w__min_ss_100C_1v60.lib"
+      max_*:
+        - "../mem_1r1w/runs/output/final/lib/max_ff_n40C_1v95/mem_1r1w__max_ff_n40C_1v95.lib"
 
 
 
