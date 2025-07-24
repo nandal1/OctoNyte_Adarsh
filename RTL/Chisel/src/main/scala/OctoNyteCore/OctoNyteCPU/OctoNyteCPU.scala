@@ -1,6 +1,3 @@
-// Licensed under the BSD 3-Clause License.
-// See https://opensource.org/licenses/BSD-3-Clause for details.
-
 package OctoNyte.OctoNyteCPU
 
 import chisel3._
@@ -15,6 +12,7 @@ class OctoNyteCPU(width: Int = 32, depth: Int = 32, numThreads: Int = 4) extends
     val memAddr = Output(UInt(32.W))  // Memory address for load/store
     val memData = Input(UInt(32.W))   // Memory data input (from data memory)
     val memWrite = Output(Bool())     // Memory write enable
+    val inst = Input(UInt(32.W))      // Fetched instruction from external InstructionMemory
   })
 
   // Pipeline stages
@@ -27,12 +25,11 @@ class OctoNyteCPU(width: Int = 32, depth: Int = 32, numThreads: Int = 4) extends
   val pc = RegInit(0.U(32.W))   // 32-bit Program Counter
   val nextPc = Wire(UInt(32.W)) // Next PC to be calculated by BranchUnit
 
-  // Instruction Fetch (IF) Stage
-  val instMem = Mem(1024, UInt(32.W))  // Instruction memory (stub for now)
+  // Register File
+  val regFile = Mem(depth, UInt(width.W))  // 32 registers, each 32 bits wide
 
-  // Fetch instruction from memory
-  val fetchedInst = instMem(pc(11, 2)) // Using 10-bit address for fetching instruction
-  IF_ID := fetchedInst
+  // Instruction Fetch (IF) Stage
+  IF_ID := io.inst  // Use the instruction fetched from the external memory
 
   // Decoder
   val opcode = IF_ID(6, 0)     // 7-bit opcode
@@ -57,8 +54,8 @@ class OctoNyteCPU(width: Int = 32, depth: Int = 32, numThreads: Int = 4) extends
 
   // Branch Unit (used in the IF stage to compute next PC)
   val branchUnit = Module(new BranchUnit)
-  branchUnit.io.rs1 := rs1  // Use the decoded register value
-  branchUnit.io.rs2 := rs2  // Use the decoded register value
+  branchUnit.io.rs1 := regFile(rs1)  // Read from register file for rs1
+  branchUnit.io.rs2 := regFile(rs2)  // Read from register file for rs2
   branchUnit.io.pc := pc
   branchUnit.io.imm := imm.asSInt
   branchUnit.io.branchOp := branchOp
@@ -67,8 +64,8 @@ class OctoNyteCPU(width: Int = 32, depth: Int = 32, numThreads: Int = 4) extends
 
   // ALU for execution
   val alu = Module(new ALU32)
-  alu.io.a := rs1  // Using the decoded register value
-  alu.io.b := rs2  // Using the decoded register value
+  alu.io.a := regFile(rs1)  // Read rs1 from register file
+  alu.io.b := regFile(rs2)  // Read rs2 from register file
   alu.io.opcode := IF_ID(5, 0) // Assuming 6-bit opcode for ALU operations
 
   // Load/Store Unit
@@ -79,9 +76,8 @@ class OctoNyteCPU(width: Int = 32, depth: Int = 32, numThreads: Int = 4) extends
   loadUnit.io.dataIn := io.memData
   loadUnit.io.funct3 := funct3
 
-  // Correct the field names based on your StoreUnit definition
   storeUnit.io.addr := alu.io.result
-  storeUnit.io.dataIn := rs2  
+  storeUnit.io.dataIn := regFile(rs2)  // Use register value for store
   storeUnit.io.funct3 := funct3  
 
   // Memory Writeback
@@ -94,8 +90,12 @@ class OctoNyteCPU(width: Int = 32, depth: Int = 32, numThreads: Int = 4) extends
     pc := pc + 4.U  // Default PC increment (sequential instructions)
   }
 
+  // Register Writeback in MEM_WB stage
+  when(MEM_WB =/= 0.U) {
+    regFile(rd) := MEM_WB  // Write back to the destination register
+  }
+
   // Outputs for memory system
   io.memAddr := storeUnit.io.addr
   io.memWrite := storeUnit.io.memWrite  // Assuming 'memWrite' is the correct field name
 }
-
